@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
@@ -162,14 +163,14 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 _buildNavItem(
                   index: 2,
-                  icon: Icons.check_circle_outline_rounded,
-                  activeIcon: Icons.check_circle_rounded,
+                  icon: Icons.notes_rounded,
+                  activeIcon: Icons.notes_rounded,
                   label: 'Tasks',
                 ),
                 _buildNavItem(
                   index: 3,
-                  icon: Icons.flag_outlined,
-                  activeIcon: Icons.flag_rounded,
+                  icon: Icons.star_outline_rounded,
+                  activeIcon: Icons.star_rounded,
                   label: 'Goals',
                 ),
                 _buildNavItem(
@@ -206,31 +207,31 @@ class _MainScreenState extends State<MainScreen> {
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
         padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 16 : 12,
-          vertical: 8,
+          horizontal: isSelected ? 20 : 12,
+          vertical: 10,
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primaryBlue.withOpacity(0.1)
+              ? const Color(0xFFE6F1FB)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(24),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               isSelected ? activeIcon : icon,
-              color: isSelected ? AppColors.primaryBlue : Colors.grey.shade400,
-              size: 24,
+              color: isSelected ? const Color(0xFF185FA5) : Colors.grey.shade400,
+              size: 26,
             ),
             // Show label only when selected
             if (isSelected) ...[
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               Text(
                 label,
                 style: const TextStyle(
-                  color: AppColors.primaryBlue,
-                  fontSize: 13,
+                  color: Color(0xFF185FA5),
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
               ),
