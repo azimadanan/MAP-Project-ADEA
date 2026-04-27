@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 /// Home Screen - Dashboard with greeting, balance summary, and upcoming tasks
-/// Placeholder implementation — will be fully built in later sprints
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -11,18 +10,18 @@ class HomeScreen extends StatelessWidget {
     final hour = DateTime.now().hour;
     String greeting;
     if (hour < 12) {
-      greeting = 'Good Morning ☀️';
+      greeting = 'Good morning';
     } else if (hour < 17) {
-      greeting = 'Good Afternoon 🌤️';
+      greeting = 'Good afternoon';
     } else {
-      greeting = 'Good Evening 🌙';
+      greeting = 'Good evening';
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -36,15 +35,16 @@ class HomeScreen extends StatelessWidget {
                       Text(
                         greeting,
                         style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
+                          fontSize: 16,
+                          color: Colors.grey.shade500,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'Welcome, User!',
+                        'Welcome, Azim!',
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: 28,
                           fontWeight: FontWeight.w800,
                           color: Color(0xFF1A1A1A),
                         ),
@@ -53,16 +53,21 @@ class HomeScreen extends StatelessWidget {
                   ),
                   // Profile avatar
                   Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE6F1FB),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(
-                      Icons.person_rounded,
+                    width: 52,
+                    height: 52,
+                    decoration: const BoxDecoration(
                       color: Color(0xFF185FA5),
-                      size: 26,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'AZ',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -75,15 +80,16 @@ class HomeScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF185FA5), Color(0xFF0C447C)],
+                  color: const Color(0xFF185FA5),
+                  borderRadius: BorderRadius.circular(28),
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/card_bg.png'), // Placeholder for subtle circles
+                    fit: BoxFit.cover,
+                    opacity: 0.1,
                   ),
-                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF185FA5).withOpacity(0.3),
+                      color: const Color(0xFF185FA5).withOpacity(0.2),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -96,34 +102,38 @@ class HomeScreen extends StatelessWidget {
                       'Total Balance',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withOpacity(0.7),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     const Text(
                       'RM 2,450.00',
                       style: TextStyle(
-                        fontSize: 32,
+                        fontSize: 36,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
-                        letterSpacing: 1,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     Row(
                       children: [
-                        _buildBalanceItem(
-                          icon: Icons.arrow_downward_rounded,
+                        _buildBalanceInfo(
+                          icon: Icons.arrow_upward_rounded,
                           label: 'Income',
                           amount: 'RM 3,200',
-                          color: const Color(0xFF4ADE80),
                         ),
-                        const SizedBox(width: 24),
-                        _buildBalanceItem(
-                          icon: Icons.arrow_upward_rounded,
+                        Container(
+                          height: 30,
+                          width: 1,
+                          margin: const EdgeInsets.symmetric(horizontal: 20),
+                          color: Colors.white.withOpacity(0.2),
+                        ),
+                        _buildBalanceInfo(
+                          icon: Icons.arrow_downward_rounded,
                           label: 'Expenses',
                           amount: 'RM 750',
-                          color: const Color(0xFFFB7185),
                         ),
                       ],
                     ),
@@ -133,72 +143,170 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // --- Quick Stats ---
+              // --- Quick Stats Row ---
               Row(
                 children: [
                   Expanded(
                     child: _buildStatCard(
                       icon: Icons.check_circle_rounded,
-                      label: 'Tasks Done',
                       value: '5/8',
+                      label: 'Tasks Done',
+                      status: 'On track',
                       color: const Color(0xFF3B6D11),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildStatCard(
-                      icon: Icons.flag_rounded,
-                      label: 'Goals Active',
+                      icon: Icons.light_mode_rounded,
                       value: '3',
+                      label: 'Goals Active',
+                      status: '2 on track',
                       color: const Color(0xFF185FA5),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildStatCard(
-                      icon: Icons.trending_up_rounded,
-                      label: 'Budget',
+                      icon: Icons.show_chart_rounded,
                       value: '76%',
+                      label: 'Budget',
+                      status: 'RM 480 left',
                       color: const Color(0xFF854F0B),
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 28),
+              const SizedBox(height: 24),
 
-              // --- Upcoming Tasks Section ---
-              const Text(
-                'Upcoming Tasks',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1A1A),
+              // --- Monthly Budget Usage Card ---
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.grey.shade100),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Monthly budget usage',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.grey.shade500,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE6F1FB),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text(
+                            '76%',
+                            style: TextStyle(
+                              color: Color(0xFF185FA5),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text(
+                          'RM 1,520',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            'of RM 2,000',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade500,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: LinearProgressIndicator(
+                        value: 0.76,
+                        minHeight: 8,
+                        backgroundColor: Colors.grey.shade100,
+                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF185FA5)),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              _buildTaskPreview(
-                'Submit MAP Report',
-                'Due today',
-                Icons.description_rounded,
-                const Color(0xFFA32D2D),
-              ),
-              const SizedBox(height: 10),
-              _buildTaskPreview(
-                'Team meeting at 3 PM',
-                'Due tomorrow',
-                Icons.groups_rounded,
-                const Color(0xFF854F0B),
-              ),
-              const SizedBox(height: 10),
-              _buildTaskPreview(
-                'Review Sprint 3 backlog',
-                'In 3 days',
-                Icons.task_alt_rounded,
-                const Color(0xFF3B6D11),
-              ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 32),
+
+              // --- Upcoming Tasks Section ---
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Upcoming tasks',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {},
+                    child: const Text(
+                      'See all',
+                      style: TextStyle(
+                        color: Color(0xFF185FA5),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _buildTaskItem(
+                title: 'Submit MAP Report',
+                date: 'Due today',
+                icon: Icons.description_rounded,
+                iconColor: const Color(0xFFA32D2D),
+              ),
+              const SizedBox(height: 12),
+              _buildTaskItem(
+                title: 'Team meeting at 3 PM',
+                date: 'Due tomorrow',
+                icon: Icons.person_rounded,
+                iconColor: const Color(0xFF854F0B),
+              ),
+              const SizedBox(height: 12),
+              _buildTaskItem(
+                title: 'Review Sprint 3 backlog',
+                date: 'In 3 days',
+                icon: Icons.check_circle_rounded,
+                iconColor: const Color(0xFF3B6D11),
+              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -206,24 +314,22 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  static Widget _buildBalanceItem({
+  Widget _buildBalanceInfo({
     required IconData icon,
     required String label,
     required String amount,
-    required Color color,
   }) {
     return Row(
       children: [
         Container(
-          width: 32,
-          height: 32,
+          padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
+            color: Colors.white.withOpacity(0.2),
+            shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: color, size: 18),
+          child: Icon(icon, color: Colors.white, size: 14),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 10),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -232,13 +338,14 @@ class HomeScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.white.withOpacity(0.7),
+                fontWeight: FontWeight.w500,
               ),
             ),
             Text(
               amount,
               style: const TextStyle(
                 fontSize: 15,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
                 color: Colors.white,
               ),
             ),
@@ -248,71 +355,88 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  static Widget _buildStatCard({
+  Widget _buildStatCard({
     required IconData icon,
-    required String label,
     required String value,
+    required String label,
+    required String status,
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.15)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade100),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 12),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 18,
+            style: const TextStyle(
+              fontSize: 20,
               fontWeight: FontWeight.w800,
-              color: color,
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            label,
+            status,
             style: TextStyle(
               fontSize: 11,
-              color: color.withOpacity(0.8),
-              fontWeight: FontWeight.w500,
+              color: color,
+              fontWeight: FontWeight.w700,
             ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  static Widget _buildTaskPreview(
-    String title,
-    String subtitle,
-    IconData icon,
-    Color color,
-  ) {
+  Widget _buildTaskItem({
+    required String title,
+    required String date,
+    required IconData icon,
+    required Color iconColor,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade100),
       ),
       child: Row(
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: iconColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: color, size: 22),
+            child: Icon(icon, color: iconColor, size: 24),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,17 +444,17 @@ class HomeScreen extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                     color: Color(0xFF1A1A1A),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  subtitle,
+                  date,
                   style: TextStyle(
-                    fontSize: 13,
-                    color: color,
+                    fontSize: 14,
+                    color: Colors.grey.shade500,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -339,7 +463,8 @@ class HomeScreen extends StatelessWidget {
           ),
           Icon(
             Icons.chevron_right_rounded,
-            color: Colors.grey.shade400,
+            color: Colors.grey.shade300,
+            size: 28,
           ),
         ],
       ),
