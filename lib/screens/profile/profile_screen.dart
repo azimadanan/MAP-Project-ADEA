@@ -104,6 +104,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final cardColor = isDark ? const Color(0xFF1A1A2E) : Colors.white;
+    final scaffoldBg = isDark ? const Color(0xFF0F0F1A) : const Color(0xFFF2F3F7);
+
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         if (state is! AuthAuthenticated) {
@@ -112,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final user = state.user;
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF2F3F7),
+          backgroundColor: scaffoldBg,
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -120,11 +125,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   // Header
                   Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    const Text('Profile', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0xFF1A1A2E))),
+                    Text('Profile', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: textColor)),
                     IconButton(
                       onPressed: () => setState(() { _isEditing = !_isEditing; if (_isEditing) _nameCtrl.text = user.name; }),
                       icon: Icon(_isEditing ? Icons.close_rounded : Icons.edit_rounded, color: const Color(0xFF185FA5)),
-                      style: IconButton.styleFrom(backgroundColor: const Color(0xFFE6F1FB), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                      style: IconButton.styleFrom(backgroundColor: isDark ? const Color(0xFF185FA5).withOpacity(0.2) : const Color(0xFFE6F1FB), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                     ),
                   ]),
                   const SizedBox(height: 32),
@@ -136,7 +141,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Center(child: Text(user.initials, style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold))),
                   ),
                   const SizedBox(height: 16),
-                  Text(user.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
+                  Text(user.name, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: textColor)),
                   const SizedBox(height: 4),
                   Text(user.email, style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280))),
                   const SizedBox(height: 32),
@@ -145,16 +150,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                    decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(16)),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       const Text('Personal Information', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF9CA3AF))),
                       const SizedBox(height: 16),
                       if (_isEditing)
                         CustomTextField(controller: _nameCtrl, label: 'Full Name', hint: 'Your name', prefixIcon: Icons.person_outline_rounded)
                       else ...[
-                        _infoRow(Icons.person_outline_rounded, 'Name', user.name),
+                        _infoRow(Icons.person_outline_rounded, 'Name', user.name, textColor),
                         const SizedBox(height: 12),
-                        _infoRow(Icons.email_outlined, 'Email', user.email),
+                        _infoRow(Icons.email_outlined, 'Email', user.email, textColor),
                       ],
                     ]),
                   ),
@@ -164,13 +169,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                    decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(16)),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       const Text('Preferences', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF9CA3AF))),
                       const SizedBox(height: 16),
-                      _toggleRow(Icons.notifications_outlined, 'Notifications', _notificationsOn, (v) { if (_isEditing) setState(() => _notificationsOn = v); }),
+                      _toggleRow(Icons.notifications_outlined, 'Notifications', _notificationsOn, (v) async {
+                        setState(() => _notificationsOn = v);
+                        final state = context.read<AuthBloc>().state;
+                        if (state is AuthAuthenticated) {
+                          await _userRepo.updateUser(state.user.uid, {
+                            'preferences': { 'notifications': v, 'darkMode': _darkModeOn }
+                          });
+                          if (context.mounted) context.read<AuthBloc>().add(AuthCheckRequested());
+                        }
+                      }, textColor),
                       const SizedBox(height: 8),
-                      _toggleRow(Icons.dark_mode_outlined, 'Dark Mode', _darkModeOn, (v) { if (_isEditing) setState(() => _darkModeOn = v); }),
+                      _toggleRow(Icons.dark_mode_outlined, 'Dark Mode', _darkModeOn, (v) async {
+                        setState(() => _darkModeOn = v);
+                        final state = context.read<AuthBloc>().state;
+                        if (state is AuthAuthenticated) {
+                          await _userRepo.updateUser(state.user.uid, {
+                            'preferences': { 'notifications': _notificationsOn, 'darkMode': v }
+                          });
+                          if (context.mounted) context.read<AuthBloc>().add(AuthCheckRequested());
+                        }
+                      }, textColor),
                     ]),
                   ),
 
@@ -201,22 +224,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value) {
+  Widget _infoRow(IconData icon, String label, String value, Color textColor) {
     return Row(children: [
       Icon(icon, color: const Color(0xFF185FA5), size: 22),
       const SizedBox(width: 12),
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
-        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E))),
+        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textColor)),
       ]),
     ]);
   }
 
-  Widget _toggleRow(IconData icon, String label, bool value, ValueChanged<bool> onChanged) {
+  Widget _toggleRow(IconData icon, String label, bool value, ValueChanged<bool> onChanged, Color textColor) {
     return Row(children: [
       Icon(icon, color: const Color(0xFF185FA5), size: 22),
       const SizedBox(width: 12),
-      Expanded(child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E)))),
+      Expanded(child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textColor))),
       Switch(value: value, onChanged: onChanged, activeColor: const Color(0xFF185FA5)),
     ]);
   }

@@ -141,12 +141,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       final credential = await _authService.signInWithGoogle();
-      final user = credential.user;
-      if (user != null) {
-        // Create or update user profile in Firestore
-        await _userRepository.createOrUpdateGoogleUser(user);
+      final firebaseUser = credential.user;
+      if (firebaseUser != null) {
+        // Create or fetch user profile in Firestore
+        final userModel = await _userRepository.createOrUpdateGoogleUser(firebaseUser);
+        // Emit directly — don't wait for the auth stream to avoid race condition
+        emit(AuthAuthenticated(userModel));
+      } else {
+        emit(const AuthError('Google Sign-In failed: no user returned'));
       }
-      // Auth stream will emit AuthAuthenticated
+    } on FirebaseAuthException catch (e) {
+      emit(AuthError(e.message ?? 'Google Sign-In failed'));
     } catch (e) {
       emit(AuthError(e.toString()));
     }

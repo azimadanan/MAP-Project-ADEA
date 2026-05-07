@@ -22,15 +22,25 @@ class AllInOneApp extends StatelessWidget {
         authService: AuthService(),
         userRepository: UserRepository(),
       )..add(AuthCheckRequested()),
-      child: MaterialApp(
-        title: 'AllInOne',
-        debugShowCheckedModeBanner: false,
-        theme: _buildTheme(),
-        home: const _AuthGate(),
-        routes: {
-          '/login': (_) => const LoginScreen(),
-          '/register': (_) => const RegisterScreen(),
-          '/forgot-password': (_) => const ForgotPasswordScreen(),
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          bool isDark = false;
+          if (state is AuthAuthenticated) {
+            isDark = state.user.preferences['darkMode'] == true;
+          }
+          return MaterialApp(
+            title: 'AllInOne',
+            debugShowCheckedModeBanner: false,
+            themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+            theme: _buildTheme(),
+            darkTheme: _buildDarkTheme(),
+            home: const _AuthGate(),
+            routes: {
+              '/login': (_) => const LoginScreen(),
+              '/register': (_) => const RegisterScreen(),
+              '/forgot-password': (_) => const ForgotPasswordScreen(),
+            },
+          );
         },
       ),
     );
@@ -71,6 +81,49 @@ class AllInOneApp extends StatelessWidget {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+    );
+  }
+
+  ThemeData _buildDarkTheme() {
+    return ThemeData(
+      brightness: Brightness.dark,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(0xFF185FA5),
+        brightness: Brightness.dark,
+        primary: const Color(0xFF185FA5),
+        error: const Color(0xFFA32D2D),
+        surface: const Color(0xFF1A1A2E),
+      ),
+      scaffoldBackgroundColor: const Color(0xFF0F0F1A),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF1A1A2E),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF185FA5),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFF1A1A2E),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF2A2A3E)),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
