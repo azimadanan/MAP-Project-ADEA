@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
 
-/// AllInOne Splash Screen
-/// Displays animated app logo, name, and tagline
-/// Auto-navigates to login screen after 3 seconds
+/// AllInOne Splash Screen — Displays animated app logo and branding
+/// Used as loading state while Firebase initializes
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -21,40 +19,23 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-
-    // Initialize animation controller
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
-
-    // Fade in animation
     _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeIn),
     );
-
-    // Scale animation for logo
     _scaleAnim = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeOutBack),
     );
-
-    // Slide up animation for tagline
     _slideAnim = Tween<Offset>(
       begin: const Offset(0, 0.5),
       end: Offset.zero,
     ).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeOut),
     );
-
-    // Start animations
     _animController.forward();
-
-    // Navigate to login after 3 seconds
-    Timer(const Duration(seconds: 3), () {
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/login');
-      }
-    });
   }
 
   @override
@@ -73,18 +54,13 @@ class _SplashScreenState extends State<SplashScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF185FA5), // Primary Blue
-              Color(0xFF0C447C), // Dark Blue
-            ],
+            colors: [Color(0xFF185FA5), Color(0xFF0C447C)],
           ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Spacer(flex: 3),
-
-            // --- Animated Logo ---
             FadeTransition(
               opacity: _fadeAnim,
               child: ScaleTransition(
@@ -106,16 +82,14 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // Background circle accent
                       Container(
                         width: 80,
                         height: 80,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: const Color(0xFFE6F1FB),
+                          color: Color(0xFFE6F1FB),
                         ),
                       ),
-                      // Icon
                       const Icon(
                         Icons.dashboard_rounded,
                         size: 56,
@@ -126,10 +100,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
             ),
-
             const SizedBox(height: 32),
-
-            // --- App Name ---
             FadeTransition(
               opacity: _fadeAnim,
               child: const Text(
@@ -142,10 +113,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
             ),
-
             const SizedBox(height: 12),
-
-            // --- Tagline with slide animation ---
             FadeTransition(
               opacity: _fadeAnim,
               child: SlideTransition(
@@ -161,10 +129,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
             ),
-
             const Spacer(flex: 3),
-
-            // --- Loading Indicator ---
             FadeTransition(
               opacity: _fadeAnim,
               child: SizedBox(
@@ -178,7 +143,6 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
             ),
-
             const SizedBox(height: 50),
           ],
         ),

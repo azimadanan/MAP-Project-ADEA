@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1014697157501",
+    "project_id": "allinone-app-3c707",
+    "storage_bucket": "allinone-app-3c707.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1014697157501:android:5cdc5f64731e7ba760e214",
+        "android_client_info": {
+          "package_name": "com.example.allinone_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhfWcXbedrAItgKyazVpf_Qx5ZJBMd6VM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1014697157501:android:3e0dde49f7a100f160e214",
+        "android_client_info": {
+          "package_name": "com.university.map_assignment"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhfWcXbedrAItgKyazVpf_Qx5ZJBMd6VM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
