@@ -54,7 +54,7 @@ class AllInOneApp extends StatelessWidget {
         error: const Color(0xFFA32D2D),
         surface: Colors.white,
       ),
-      scaffoldBackgroundColor: const Color(0xFFF2F3F7),
+      scaffoldBackgroundColor: const Color(0xFFfcf8ff),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.white,
         foregroundColor: Color(0xFF1A1A2E),
