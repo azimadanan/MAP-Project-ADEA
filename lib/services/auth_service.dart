@@ -1,5 +1,6 @@
 /// Authentication Service — Firebase Auth wrapper
 /// Handles email/password auth, Google Sign-In, and password reset
+library;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';

@@ -295,7 +295,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(width: 16),
           Expanded(child: Text(title, style: TextStyle(fontSize: 15, color: textColor))),
-          Switch(value: value, onChanged: onChanged, activeColor: activeColor),
+          Switch(value: value, onChanged: onChanged, activeThumbColor: activeColor),
         ],
       ),
     );

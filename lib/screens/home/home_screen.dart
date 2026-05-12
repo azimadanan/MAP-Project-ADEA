@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../blocs/auth/auth_bloc.dart';
-import '../../blocs/auth/auth_state.dart';
 import '../finance/finance_screen.dart';
 import '../tasks/tasks_screen.dart';
 import '../goals/goals_screen.dart';
