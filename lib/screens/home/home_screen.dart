@@ -21,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
     TasksScreen(),
     GoalsScreen(),
     ProfileScreen(),
-  ]; //kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+  ]; 
 
   @override
   Widget build(BuildContext context) {
@@ -54,15 +54,15 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  Widget _navItem(int index, IconData icon, IconData activeIcon, String label, bool isDark, Color unselectedColor) {
+  
+  Widget _navItem(int index, IconData icon, IconData activeIcon, String label, bool isDark, Color unselectedColor) { // Separate method for nav item to keep build() clean.
     final isSelected = _currentIndex == index;
     final secondaryContainer = isDark ? const Color(0xFF958dff) : const Color(0xFFe3dfff);
     final onSecondaryContainer = isDark ? const Color(0xFF2b1c8f) : const Color(0xFF140067);
 
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
-      behavior: HitTestBehavior.opaque,
+      behavior: HitTestBehavior.opaque, // what makes the icons easier to tap by allowing taps in the padding area
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
@@ -81,6 +81,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
+// SECTION 01 
 
 /// Rich home dashboard tab content matching Stitch Design
 class _HomeDashboard extends StatelessWidget {
