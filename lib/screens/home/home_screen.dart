@@ -85,25 +85,25 @@ class _HomeScreenState extends State<HomeScreen> {
 // SECTION 01 
 
 /// Rich home dashboard tab content matching Stitch Design
-class _HomeDashboard extends StatelessWidget {
+class _HomeDashboard extends StatelessWidget { // This is just a static mockup to get the design right before adding real data and interactivity.
   const _HomeDashboard();
 
   @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
-    final subtextColor = isDark ? const Color(0xFFc2c6d2) : const Color(0xFF424751);
+  Widget build(BuildContext context) { // Define all the colors at the top of build() to keep the widget tree cleaner and ensure consistent theming throughout the screen.
+    final isDark = Theme.of(context).brightness == Brightness.dark; // Where is brightness.dark defined? It's a property of the ThemeData class in Flutter. 
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E); 
+    final subtextColor = isDark ? const Color(0xFFc2c6d2) : const Color(0xFF424751); 
     final cardColor = isDark ? const Color(0xFF1A1A2E) : Colors.white;
     final scaffoldBg = isDark ? const Color(0xFF0F0F1A) : const Color(0xFFf2f3f7);
     final outlineColor = isDark ? const Color(0xFF727782) : const Color(0xFFc2c6d2);
     final primaryContainer = const Color(0xFF185FA5);
-    final primary = const Color(0xFF004782);
+    final primary = const Color(0xFF004782); 
 
-    return Scaffold(
-      backgroundColor: scaffoldBg,
-      appBar: AppBar(
+    return Scaffold( 
+      backgroundColor: scaffoldBg, 
+      appBar: AppBar( 
         backgroundColor: isDark ? const Color(0xFF1A1A2E) : const Color(0xFFfcf8ff),
-        elevation: 0,
+        elevation: 4,
         titleSpacing: 20,
         title: Row(
           children: [
@@ -116,12 +116,12 @@ class _HomeDashboard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Good morning 🌤', style: TextStyle(fontSize: 13, color: subtextColor, fontWeight: FontWeight.w400)),
+                Text('Good morning 🌤 PUNK', style: TextStyle(fontSize: 13, color: subtextColor, fontWeight: FontWeight.w400)),
                 Text('AllInOne', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: primary)),
               ],
             ),
           ],
-        ),
+        ),cd
         actions: [
           IconButton(
             icon: Icon(Icons.notifications_none_rounded, color: subtextColor),
@@ -129,8 +129,9 @@ class _HomeDashboard extends StatelessWidget {
           ),
           const SizedBox(width: 8),
         ],
-      ),
-      body: SingleChildScrollView(
+      ), // AppBar with profile avatar and greeting text, matching the design. The notification icon is just a placeholder for now.
+
+      body: SingleChildScrollView( // Wraps the content so it can be scrolled if it overflows.
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,6 +251,8 @@ class _HomeDashboard extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
+  // SECTION 02
+
             // Upcoming Tasks
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -286,6 +289,8 @@ class _HomeDashboard extends StatelessWidget {
       ),
     );
   }
+
+  // End of home dashboard build method.
 
   Widget _bentoStat(IconData icon, Color iconColor, String value, String label, Color cardColor, Color textColor, Color subtextColor) {
     return Container(
