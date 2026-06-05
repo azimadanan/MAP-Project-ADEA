@@ -91,6 +91,7 @@ class _HomeDashboard extends StatelessWidget { // This is just a static mockup t
 
   @override
   Widget build(BuildContext context) { // Define all the colors at the top of build() to keep the widget tree cleaner and ensure consistent theming throughout the screen.
+    // Colors defined here.
     final isDark = Theme.of(context).brightness == Brightness.dark; // Where is brightness.dark defined? It's a property of the ThemeData class in Flutter. 
     final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E); 
     final subtextColor = isDark ? const Color(0xFFc2c6d2) : const Color(0xFF424751); 
@@ -105,7 +106,7 @@ class _HomeDashboard extends StatelessWidget { // This is just a static mockup t
       appBar: AppBar( 
         backgroundColor: isDark ? const Color(0xFF1A1A2E) : const Color(0xFFfcf8ff),
         elevation: 4, // originally 0, but added a subtle shadow for better separation from the body.
-        titleSpacing: 20,
+        titleSpacing: 20, 
         title: Row(
           children: [
             const CircleAvatar(
@@ -117,7 +118,7 @@ class _HomeDashboard extends StatelessWidget { // This is just a static mockup t
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Good morning 🌤 TEST', style: TextStyle(fontSize: 13, color: subtextColor, fontWeight: FontWeight.w400)),
+                Text('Good morning 🌤 ', style: TextStyle(fontSize: 13, color: subtextColor, fontWeight: FontWeight.w400)),
                 Text('AllInOne', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: primary)),
               ],
             ),
@@ -126,9 +127,9 @@ class _HomeDashboard extends StatelessWidget { // This is just a static mockup t
         actions: [
           IconButton(
             icon: Icon(Icons.notifications_none_rounded, color: subtextColor),
-            onPressed: () {},
+            onPressed: () {}, // TBD
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 8), 
         ],
       ), // AppBar with profile avatar and greeting text, matching the design. The notification icon is just a placeholder for now.
 
@@ -139,8 +140,8 @@ class _HomeDashboard extends StatelessWidget { // This is just a static mockup t
           children: [
             // Hero Balance Card
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              width: double.infinity, // infinity means an endless number. Double is just the data type. It makes the container take up the full width of its parent.
+              padding: const EdgeInsets.all(20), // we use const because the padding values are fixed and won't change, which can help with performance.
               decoration: BoxDecoration(
                 color: primaryContainer,
                 borderRadius: BorderRadius.circular(16),
@@ -150,7 +151,7 @@ class _HomeDashboard extends StatelessWidget { // This is just a static mockup t
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('Total Balance', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w400)),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 4), // SizedBox is just a simple way to add vertical or horizontal spacing between widgets. Here, it adds 4 pixels of vertical space between the "Total Balance" text and the actual balance amount.
                   const Text('RM 12,450.00', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 20),
                   Row(
@@ -205,12 +206,14 @@ class _HomeDashboard extends StatelessWidget { // This is just a static mockup t
 
             // Bento Stats
             Row(
-              children: [
+              children: [ // Expanded is like justify-content: space-between; it makes the children take up equal space within the Row. So, each _bentoStat will be the same width and fill the row evenly.
                 Expanded(child: _bentoStat(Icons.checklist_rounded, primary, '5/8', 'Tasks', cardColor, textColor, subtextColor)),
                 const SizedBox(width: 12),
                 Expanded(child: _bentoStat(Icons.workspace_premium_rounded, const Color(0xFF584fbc), '2', 'Goals', cardColor, textColor, subtextColor)),
                 const SizedBox(width: 12),
                 Expanded(child: _bentoStat(Icons.pie_chart_rounded, const Color(0xFF386a0d), '65%', 'Budget', cardColor, textColor, subtextColor)),
+                const SizedBox(width: 12),
+                Expanded(child: _bentoStat(Icons.chair, primary, 'test string value', 'test string label', cardColor, textColor, subtextColor))
               ],
             ),
             const SizedBox(height: 20),
@@ -252,8 +255,6 @@ class _HomeDashboard extends StatelessWidget { // This is just a static mockup t
             ),
             const SizedBox(height: 24),
 
-  // SECTION 02
-
             // Upcoming Tasks
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -292,7 +293,7 @@ class _HomeDashboard extends StatelessWidget { // This is just a static mockup t
   }
 
   // End of home dashboard build method.
-
+ // function: bentoStat [Reference]
   Widget _bentoStat(IconData icon, Color iconColor, String value, String label, Color cardColor, Color textColor, Color subtextColor) {
     return Container(
       height: 96,
