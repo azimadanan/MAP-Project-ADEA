@@ -88,11 +88,7 @@ class _HomeScreenState extends State<HomeScreen> { //assigns the state (_HomeScr
   }
 }
 
-<<<<<<< HEAD
 // SECTION 2
-=======
-// SECTION 01 
->>>>>>> b68c4a7b73642ea3bddd200cd527d914a048d796
 
 /// Rich home dashboard tab content matching Stitch Design
 class _HomeDashboard extends StatelessWidget { // This is just a static mockup to get the design right before adding real data and interactivity.
@@ -113,11 +109,7 @@ class _HomeDashboard extends StatelessWidget { // This is just a static mockup t
       backgroundColor: scaffoldBg, 
       appBar: AppBar( 
         backgroundColor: isDark ? const Color(0xFF1A1A2E) : const Color(0xFFfcf8ff),
-<<<<<<< HEAD
         elevation: 4, // originally 0, but added a subtle shadow for better separation from the body.
-=======
-        elevation: 4,
->>>>>>> b68c4a7b73642ea3bddd200cd527d914a048d796
         titleSpacing: 20,
         title: Row(
           children: [
@@ -130,11 +122,7 @@ class _HomeDashboard extends StatelessWidget { // This is just a static mockup t
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-<<<<<<< HEAD
                 Text('Good morning 🌤 ', style: TextStyle(fontSize: 13, color: subtextColor, fontWeight: FontWeight.w400)),
-=======
-                Text('Good morning 🌤 PUNK', style: TextStyle(fontSize: 13, color: subtextColor, fontWeight: FontWeight.w400)),
->>>>>>> b68c4a7b73642ea3bddd200cd527d914a048d796
                 Text('AllInOne', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: primary)),
               ],
             ),
