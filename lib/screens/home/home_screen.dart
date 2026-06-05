@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> { //assigns the state (_HomeScr
     TasksScreen(), // So, all the pages are given their indexes (0 - 4) and when we tap on the bottom nav, 
     GoalsScreen(), // it will update _currentIndex and show the corresponding screen from this list.
     ProfileScreen(),
-  ];
+  ]; 
 
   @override // @override: adjusting the default build() method.
   Widget build(BuildContext context) { // Widget build: a function that must return a widget (piece of UI). Widget is the return type.
@@ -53,17 +53,22 @@ class _HomeScreenState extends State<HomeScreen> { //assigns the state (_HomeScr
       ),
     );
   }
+<<<<<<< HEAD
 
 // SECTION 1 
 
   Widget _navItem(int index, IconData icon, IconData activeIcon, String label, bool isDark, Color unselectedColor) {
+=======
+  
+  Widget _navItem(int index, IconData icon, IconData activeIcon, String label, bool isDark, Color unselectedColor) { // Separate method for nav item to keep build() clean.
+>>>>>>> b68c4a7b73642ea3bddd200cd527d914a048d796
     final isSelected = _currentIndex == index;
     final secondaryContainer = isDark ? const Color(0xFF958dff) : const Color(0xFFe3dfff);
     final onSecondaryContainer = isDark ? const Color(0xFF2b1c8f) : const Color(0xFF140067);
 
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
-      behavior: HitTestBehavior.opaque,
+      behavior: HitTestBehavior.opaque, // what makes the icons easier to tap by allowing taps in the padding area
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
@@ -83,28 +88,36 @@ class _HomeScreenState extends State<HomeScreen> { //assigns the state (_HomeScr
   }
 }
 
+<<<<<<< HEAD
 // SECTION 2
+=======
+// SECTION 01 
+>>>>>>> b68c4a7b73642ea3bddd200cd527d914a048d796
 
 /// Rich home dashboard tab content matching Stitch Design
-class _HomeDashboard extends StatelessWidget {
+class _HomeDashboard extends StatelessWidget { // This is just a static mockup to get the design right before adding real data and interactivity.
   const _HomeDashboard();
 
   @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
-    final subtextColor = isDark ? const Color(0xFFc2c6d2) : const Color(0xFF424751);
+  Widget build(BuildContext context) { // Define all the colors at the top of build() to keep the widget tree cleaner and ensure consistent theming throughout the screen.
+    final isDark = Theme.of(context).brightness == Brightness.dark; // Where is brightness.dark defined? It's a property of the ThemeData class in Flutter. 
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E); 
+    final subtextColor = isDark ? const Color(0xFFc2c6d2) : const Color(0xFF424751); 
     final cardColor = isDark ? const Color(0xFF1A1A2E) : Colors.white;
     final scaffoldBg = isDark ? const Color(0xFF0F0F1A) : const Color(0xFFf2f3f7);
     final outlineColor = isDark ? const Color(0xFF727782) : const Color(0xFFc2c6d2);
     final primaryContainer = const Color(0xFF185FA5);
-    final primary = const Color(0xFF004782);
+    final primary = const Color(0xFF004782); 
 
-    return Scaffold(
-      backgroundColor: scaffoldBg,
-      appBar: AppBar(
+    return Scaffold( 
+      backgroundColor: scaffoldBg, 
+      appBar: AppBar( 
         backgroundColor: isDark ? const Color(0xFF1A1A2E) : const Color(0xFFfcf8ff),
+<<<<<<< HEAD
         elevation: 4, // originally 0, but added a subtle shadow for better separation from the body.
+=======
+        elevation: 4,
+>>>>>>> b68c4a7b73642ea3bddd200cd527d914a048d796
         titleSpacing: 20,
         title: Row(
           children: [
@@ -117,12 +130,16 @@ class _HomeDashboard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+<<<<<<< HEAD
                 Text('Good morning 🌤 ', style: TextStyle(fontSize: 13, color: subtextColor, fontWeight: FontWeight.w400)),
+=======
+                Text('Good morning 🌤 PUNK', style: TextStyle(fontSize: 13, color: subtextColor, fontWeight: FontWeight.w400)),
+>>>>>>> b68c4a7b73642ea3bddd200cd527d914a048d796
                 Text('AllInOne', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: primary)),
               ],
             ),
           ],
-        ),
+        ),cd
         actions: [
           IconButton(
             icon: Icon(Icons.notifications_none_rounded, color: subtextColor),
@@ -130,8 +147,9 @@ class _HomeDashboard extends StatelessWidget {
           ),
           const SizedBox(width: 8),
         ],
-      ),
-      body: SingleChildScrollView(
+      ), // AppBar with profile avatar and greeting text, matching the design. The notification icon is just a placeholder for now.
+
+      body: SingleChildScrollView( // Wraps the content so it can be scrolled if it overflows.
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,6 +269,8 @@ class _HomeDashboard extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
+  // SECTION 02
+
             // Upcoming Tasks
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -287,6 +307,8 @@ class _HomeDashboard extends StatelessWidget {
       ),
     );
   }
+
+  // End of home dashboard build method.
 
   Widget _bentoStat(IconData icon, Color iconColor, String value, String label, Color cardColor, Color textColor, Color subtextColor) {
     return Container(
