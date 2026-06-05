@@ -104,7 +104,7 @@ class _HomeDashboard extends StatelessWidget {
       backgroundColor: scaffoldBg,
       appBar: AppBar(
         backgroundColor: isDark ? const Color(0xFF1A1A2E) : const Color(0xFFfcf8ff),
-        elevation: 0,
+        elevation: 4, // originally 0, but added a subtle shadow for better separation from the body.
         titleSpacing: 20,
         title: Row(
           children: [
@@ -117,7 +117,7 @@ class _HomeDashboard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Good morning 🌤', style: TextStyle(fontSize: 13, color: subtextColor, fontWeight: FontWeight.w400)),
+                Text('Good morning 🌤 ', style: TextStyle(fontSize: 13, color: subtextColor, fontWeight: FontWeight.w400)),
                 Text('AllInOne', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: primary)),
               ],
             ),
