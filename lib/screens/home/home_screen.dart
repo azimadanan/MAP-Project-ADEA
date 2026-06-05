@@ -53,15 +53,10 @@ class _HomeScreenState extends State<HomeScreen> { //assigns the state (_HomeScr
       ),
     );
   }
-<<<<<<< HEAD
 
 // SECTION 1 
 
   Widget _navItem(int index, IconData icon, IconData activeIcon, String label, bool isDark, Color unselectedColor) {
-=======
-  
-  Widget _navItem(int index, IconData icon, IconData activeIcon, String label, bool isDark, Color unselectedColor) { // Separate method for nav item to keep build() clean.
->>>>>>> b68c4a7b73642ea3bddd200cd527d914a048d796
     final isSelected = _currentIndex == index;
     final secondaryContainer = isDark ? const Color(0xFF958dff) : const Color(0xFFe3dfff);
     final onSecondaryContainer = isDark ? const Color(0xFF2b1c8f) : const Color(0xFF140067);
@@ -122,12 +117,12 @@ class _HomeDashboard extends StatelessWidget { // This is just a static mockup t
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Good morning 🌤 ', style: TextStyle(fontSize: 13, color: subtextColor, fontWeight: FontWeight.w400)),
+                Text('Good morning 🌤 TEST', style: TextStyle(fontSize: 13, color: subtextColor, fontWeight: FontWeight.w400)),
                 Text('AllInOne', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: primary)),
               ],
             ),
           ],
-        ),cd
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.notifications_none_rounded, color: subtextColor),
