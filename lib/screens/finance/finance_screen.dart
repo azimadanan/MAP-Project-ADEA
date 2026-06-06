@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/budget_model.dart';
 import '../../models/transaction_model.dart';
 import '../../services/finance_service.dart';
 
@@ -13,12 +14,16 @@ class FinanceScreen extends StatefulWidget {
 class _FinanceScreenState extends State<FinanceScreen> {
   late FinanceService _financeService;
   final _formKey = GlobalKey<FormState>();
-  
+  final _budgetFormKey = GlobalKey<FormState>();
+
   // Form fields
   late TextEditingController _titleController;
   late TextEditingController _amountController;
+  late TextEditingController _budgetLimitController;
   String _selectedType = 'expense';
   String _selectedCategory = 'Food & Dining';
+  bool _isSavingBudget = false;
+  bool _isSavingTransaction = false;
 
   final List<String> _categories = [
     'Food & Dining',
@@ -38,13 +43,227 @@ class _FinanceScreenState extends State<FinanceScreen> {
     _financeService = FinanceService();
     _titleController = TextEditingController();
     _amountController = TextEditingController();
+    _budgetLimitController = TextEditingController();
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _amountController.dispose();
+    _budgetLimitController.dispose();
     super.dispose();
+  }
+
+  void _showSnackBar(String message, {Color? backgroundColor}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: backgroundColor,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  void _showBudgetForm() {
+    _budgetLimitController.clear();
+    var selectedBudgetCategory = 'Food & Dining';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: SingleChildScrollView(
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              child: Form(
+                key: _budgetFormKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Set Monthly Budget',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Set a spending limit per category. You will get an alert when you exceed it.',
+                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                    ),
+                    const SizedBox(height: 20),
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedBudgetCategory,
+                      decoration: InputDecoration(
+                        labelText: 'Category',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      items: _categories.map((category) {
+                        return DropdownMenuItem(
+                          value: category,
+                          child: Text(category),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setSheetState(() => selectedBudgetCategory = value);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _budgetLimitController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Monthly Limit (RM)',
+                        hintText: 'Enter budget limit',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) {
+                          return 'Please enter a limit';
+                        }
+                        final limit = double.tryParse(value!);
+                        if (limit == null || limit <= 0) {
+                          return 'Please enter a valid amount';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isSavingBudget
+                            ? null
+                            : () => _saveBudget(
+                                  sheetContext,
+                                  selectedBudgetCategory,
+                                ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF185FA5),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: _isSavingBudget
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Save Budget',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Your budgets',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 12),
+                    StreamBuilder<List<BudgetModel>>(
+                      stream: _financeService.getBudgets(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        if (snapshot.hasError) {
+                          return Text('Could not load budgets: ${snapshot.error}');
+                        }
+
+                        final budgets = snapshot.data ?? [];
+                        if (budgets.isEmpty) {
+                          return Text(
+                            'No budgets set yet.',
+                            style: TextStyle(color: Colors.grey.shade600),
+                          );
+                        }
+
+                        return Column(
+                          children: budgets.map((budget) {
+                            return ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(budget.category),
+                              trailing: Text(
+                                'RM ${budget.limitAmount.toStringAsFixed(2)}',
+                                style: const TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveBudget(
+    BuildContext sheetContext,
+    String selectedBudgetCategory,
+  ) async {
+    if (!_budgetFormKey.currentState!.validate()) return;
+
+    setState(() => _isSavingBudget = true);
+
+    try {
+      final budget = BudgetModel(
+        id: '',
+        category: selectedBudgetCategory,
+        limitAmount: double.parse(_budgetLimitController.text),
+      );
+
+      await _financeService.setBudgetLimit(budget);
+
+      if (!sheetContext.mounted) return;
+      Navigator.pop(sheetContext);
+      if (!mounted) return;
+      _showSnackBar('Budget saved for $selectedBudgetCategory');
+      _budgetLimitController.clear();
+    } catch (e) {
+      if (!mounted) return;
+      _showSnackBar(
+        e.toString().replaceFirst('Exception: ', ''),
+        backgroundColor: Colors.red.shade700,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingBudget = false);
+      }
+    }
+  }
+
+  Future<void> _checkBudgetOverspend({required String category}) async {
+    final budget = await _financeService.getBudgetForCategory(category);
+    if (budget == null) return;
+
+    final currentSpend = await _financeService.calculateCategorySpend(
+      category,
+      DateTime.now(),
+    );
+
+    if (currentSpend > budget.limitAmount) {
+      if (!mounted) return;
+      _showSnackBar(
+        'Alert: You have exceeded your budget for $category!',
+        backgroundColor: Colors.red.shade700,
+      );
+    }
   }
 
   /// Open bottom sheet for adding/editing transactions
@@ -153,15 +372,32 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => _saveTransaction(transaction),
+                    onPressed: _isSavingTransaction
+                        ? null
+                        : () => _saveTransaction(transaction),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF185FA5),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: Text(
-                      transaction == null ? 'Add Transaction' : 'Update Transaction',
-                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
+                    child: _isSavingTransaction
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            transaction == null
+                                ? 'Add Transaction'
+                                : 'Update Transaction',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
                 ),
                 if (transaction != null) ...[
@@ -193,6 +429,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
   void _saveTransaction(TransactionModel? transaction) async {
     if (!_formKey.currentState!.validate()) return;
 
+    setState(() => _isSavingTransaction = true);
+
     try {
       final newTransaction = TransactionModel(
         id: transaction?.id ?? '',
@@ -206,24 +444,27 @@ class _FinanceScreenState extends State<FinanceScreen> {
       if (transaction == null) {
         await _financeService.addTransaction(newTransaction);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Transaction added successfully')),
-        );
+        Navigator.pop(context);
+        _showSnackBar('Transaction added successfully');
+        if (newTransaction.type == 'expense') {
+          await _checkBudgetOverspend(category: newTransaction.category);
+        }
       } else {
         await _financeService.updateTransaction(newTransaction);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Transaction updated successfully')),
-        );
+        Navigator.pop(context);
+        _showSnackBar('Transaction updated successfully');
       }
-
-      if (!mounted) return;
-      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
+      _showSnackBar(
+        e.toString().replaceFirst('Exception: ', ''),
+        backgroundColor: Colors.red.shade700,
       );
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingTransaction = false);
+      }
     }
   }
 
@@ -283,6 +524,17 @@ class _FinanceScreenState extends State<FinanceScreen> {
         elevation: 0,
         title: Text('Finance', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: textColor)),
         actions: [
+          TextButton.icon(
+            onPressed: _showBudgetForm,
+            icon: const Icon(Icons.savings_outlined, size: 18, color: Color(0xFF185FA5)),
+            label: const Text(
+              'Set Budgets',
+              style: TextStyle(
+                color: Color(0xFF185FA5),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
           Container(
             margin: const EdgeInsets.only(right: 20),
             child: const CircleAvatar(
