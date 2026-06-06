@@ -1,8 +1,269 @@
 import 'package:flutter/material.dart';
+import '../../models/transaction_model.dart';
+import '../../services/finance_service.dart';
 
-/// Finance Screen — Finance management UI matching Stitch Design
-class FinanceScreen extends StatelessWidget {
+/// Updated Finance Screen with CRUD operations
+class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
+
+  @override
+  State<FinanceScreen> createState() => _FinanceScreenState();
+}
+
+class _FinanceScreenState extends State<FinanceScreen> {
+  late FinanceService _financeService;
+  final _formKey = GlobalKey<FormState>();
+  
+  // Form fields
+  late TextEditingController _titleController;
+  late TextEditingController _amountController;
+  String _selectedType = 'expense';
+  String _selectedCategory = 'Food & Dining';
+
+  final List<String> _categories = [
+    'Food & Dining',
+    'Transport',
+    'Shopping',
+    'Housing',
+    'Entertainment',
+    'Utilities',
+    'Other',
+  ];
+
+  final List<String> _types = ['income', 'expense'];
+
+  @override
+  void initState() {
+    super.initState();
+    _financeService = FinanceService();
+    _titleController = TextEditingController();
+    _amountController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  /// Open bottom sheet for adding/editing transactions
+  void _showTransactionForm({TransactionModel? transaction}) {
+    if (transaction != null) {
+      _titleController.text = transaction.title;
+      _amountController.text = transaction.amount.toString();
+      _selectedType = transaction.type;
+      _selectedCategory = transaction.category;
+    } else {
+      _titleController.clear();
+      _amountController.clear();
+      _selectedType = 'expense';
+      _selectedCategory = 'Food & Dining';
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  transaction == null ? 'Add Transaction' : 'Edit Transaction',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _titleController,
+                  decoration: InputDecoration(
+                    labelText: 'Title',
+                    hintText: 'Enter transaction title',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  validator: (value) {
+                    if (value?.isEmpty ?? true) {
+                      return 'Please enter a title';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _amountController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Amount',
+                    hintText: 'Enter amount',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  validator: (value) {
+                    if (value?.isEmpty ?? true) {
+                      return 'Please enter an amount';
+                    }
+                    if (double.tryParse(value!) == null) {
+                      return 'Please enter a valid number';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: _selectedType,
+                  decoration: InputDecoration(
+                    labelText: 'Type',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  items: _types.map((type) {
+                    return DropdownMenuItem(
+                      value: type,
+                      child: Text(type.toUpperCase()),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _selectedType = value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: _selectedCategory,
+                  decoration: InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  items: _categories.map((category) {
+                    return DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _selectedCategory = value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => _saveTransaction(transaction),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF185FA5),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      transaction == null ? 'Add Transaction' : 'Update Transaction',
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+                if (transaction != null) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => _deleteTransaction(transaction.id),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: const BorderSide(color: Colors.red),
+                      ),
+                      child: const Text(
+                        'Delete Transaction',
+                        style: TextStyle(color: Colors.red, fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Save new or updated transaction
+  void _saveTransaction(TransactionModel? transaction) async {
+    if (!_formKey.currentState!.validate()) return;
+
+    try {
+      final newTransaction = TransactionModel(
+        id: transaction?.id ?? '',
+        title: _titleController.text,
+        amount: double.parse(_amountController.text),
+        date: DateTime.now(),
+        type: _selectedType,
+        category: _selectedCategory,
+      );
+
+      if (transaction == null) {
+        await _financeService.addTransaction(newTransaction);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Transaction added successfully')),
+        );
+      } else {
+        await _financeService.updateTransaction(newTransaction);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Transaction updated successfully')),
+        );
+      }
+
+      if (!mounted) return;
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    }
+  }
+
+  /// Delete transaction with confirmation
+  void _deleteTransaction(String id) async {
+    Navigator.pop(context);
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Transaction?'),
+        content: const Text('This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await _financeService.deleteTransaction(id);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Transaction deleted successfully')),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +298,6 @@ class FinanceScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Month Selector
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
@@ -57,7 +317,7 @@ class FinanceScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Big Summary Card
+            // Summary Card
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -98,7 +358,6 @@ class FinanceScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  // Mini Bar Chart
                   SizedBox(
                     height: 60,
                     child: Row(
@@ -119,7 +378,7 @@ class FinanceScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Spending by Category
+            // Transactions List with StreamBuilder
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -128,36 +387,7 @@ class FinanceScreen extends StatelessWidget {
                 boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 4, offset: const Offset(0, 2))],
               ),
               child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Spending by Category', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: textColor)),
-                      Text('See All', style: TextStyle(fontSize: 13, color: primary, fontWeight: FontWeight.w500)),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _categoryItem('Food & Dining', 'RM 850', Icons.restaurant_rounded, const Color(0xFFFF6B00), const Color(0xFFFFEFE5), 0.65, textColor),
-                  const SizedBox(height: 12),
-                  _categoryItem('Transport', 'RM 320', Icons.directions_car_rounded, const Color(0xFF137333), const Color(0xFFE6F4EA), 0.4, textColor),
-                  const SizedBox(height: 12),
-                  _categoryItem('Shopping', 'RM 450', Icons.shopping_bag_rounded, const Color(0xFFC5221F), const Color(0xFFFCE8E6), 0.5, textColor),
-                  const SizedBox(height: 12),
-                  _categoryItem('Housing', 'RM 1200', Icons.home_rounded, const Color(0xFF5F6368), const Color(0xFFE8EAED), 0.85, textColor),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Recent Transactions
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 4, offset: const Offset(0, 2))],
-              ),
-              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -167,13 +397,94 @@ class FinanceScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  _transactionItem('Jaya Grocer', 'Today, 2:30 PM', '-RM 142.50', Icons.storefront_rounded, textColor, subtextColor, textColor),
-                  Divider(color: outlineColor.withOpacity(0.2), height: 24),
-                  _transactionItem('Salary Transfer', 'Yesterday, 9:00 AM', '+RM 5,200.00', Icons.payments_rounded, const Color(0xFF137333), subtextColor, const Color(0xFF137333), iconBg: const Color(0xFFE6F4EA)),
-                  Divider(color: outlineColor.withOpacity(0.2), height: 24),
-                  _transactionItem('Starbucks', 'Oct 24, 10:15 AM', '-RM 18.00', Icons.local_cafe_rounded, textColor, subtextColor, textColor),
-                  Divider(color: outlineColor.withOpacity(0.2), height: 24),
-                  _transactionItem('Grab Ride', 'Oct 23, 6:45 PM', '-RM 24.50', Icons.directions_car_rounded, textColor, subtextColor, textColor),
+                  StreamBuilder<List<TransactionModel>>(
+                    stream: _financeService.getTransactions(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator(color: primaryContainer));
+                      }
+
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Text('Error: ${snapshot.error}', style: TextStyle(color: textColor)),
+                        );
+                      }
+
+                      final transactions = snapshot.data ?? [];
+
+                      if (transactions.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: Text(
+                              'No transactions yet. Add one to get started!',
+                              style: TextStyle(color: subtextColor),
+                            ),
+                          ),
+                        );
+                      }
+
+                      return ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: transactions.length,
+                        separatorBuilder: (_, __) => Divider(color: outlineColor.withOpacity(0.2), height: 24),
+                        itemBuilder: (context, index) {
+                          final transaction = transactions[index];
+                          final isIncome = transaction.type == 'income';
+                          final amountColor = isIncome ? const Color(0xFF137333) : textColor;
+                          final amountSign = isIncome ? '+' : '-';
+                          final iconColor = isIncome ? const Color(0xFF137333) : Colors.red;
+                          final iconBg = isIncome ? const Color(0xFFE6F4EA) : const Color(0xFFFFEFE5);
+
+                          return GestureDetector(
+                            onTap: () => _showTransactionForm(transaction: transaction),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+                                  child: Icon(
+                                    isIncome ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
+                                    color: iconColor,
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(transaction.title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
+                                      const SizedBox(height: 2),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            transaction.category,
+                                            style: TextStyle(fontSize: 12, color: subtextColor),
+                                          ),
+                                          Text(
+                                            '${DateTime.now().difference(transaction.date).inDays}d ago',
+                                            style: TextStyle(fontSize: 12, color: subtextColor),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  '$amountSign RM ${transaction.amount.toStringAsFixed(2)}',
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: amountColor),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
@@ -195,7 +506,7 @@ class FinanceScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () => _showTransactionForm(),
         backgroundColor: primaryContainer,
         child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
       ),
@@ -224,74 +535,6 @@ class FinanceScreen extends StatelessWidget {
             fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _categoryItem(String title, String amount, IconData icon, Color color, Color bg, double progress, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.transparent),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40, height: 40,
-            decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
-                    Text(amount, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 8,
-                    backgroundColor: const Color(0xFFe2e0fc).withOpacity(0.5),
-                    valueColor: AlwaysStoppedAnimation<Color>(color),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _transactionItem(String title, String subtitle, String amount, IconData icon, Color titleColor, Color subColor, Color amountColor, {Color? iconBg}) {
-    return Row(
-      children: [
-        Container(
-          width: 48, height: 48,
-          decoration: BoxDecoration(color: iconBg ?? const Color(0xFFefecff), shape: BoxShape.circle),
-          child: Icon(icon, color: iconBg == null ? const Color(0xFF424751) : amountColor, size: 24),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: titleColor)),
-              const SizedBox(height: 2),
-              Text(subtitle, style: TextStyle(fontSize: 12, color: subColor)),
-            ],
-          ),
-        ),
-        Text(amount, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: amountColor)),
       ],
     );
   }
