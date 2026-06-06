@@ -94,9 +94,11 @@ class FinanceService {
       final querySnapshot = await _transactionsCollection
           .where('type', isEqualTo: 'income')
           .get();
-      return querySnapshot.docs.fold(0.0, (sum, doc) {
-        return sum + ((doc['amount'] as num?)?.toDouble() ?? 0.0);
-      });
+      double total = 0.0;
+      for (final doc in querySnapshot.docs) {
+        total += ((doc['amount'] as num?)?.toDouble() ?? 0.0);
+      }
+      return total;
     } catch (e) {
       throw Exception('Failed to calculate income: ${e.toString()}');
     }
@@ -108,9 +110,11 @@ class FinanceService {
       final querySnapshot = await _transactionsCollection
           .where('type', isEqualTo: 'expense')
           .get();
-      return querySnapshot.docs.fold(0.0, (sum, doc) {
-        return sum + ((doc['amount'] as num?)?.toDouble() ?? 0.0);
-      });
+      double total = 0.0;
+      for (final doc in querySnapshot.docs) {
+        total += ((doc['amount'] as num?)?.toDouble() ?? 0.0);
+      }
+      return total;
     } catch (e) {
       throw Exception('Failed to calculate expenses: ${e.toString()}');
     }
