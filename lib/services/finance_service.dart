@@ -1,10 +1,27 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/budget_model.dart';
 import '../models/transaction_model.dart';
 
+/// Live balance snapshot: baseBalance + income - expenses
+class RunningBalanceSummary {
+  final double baseBalance;
+  final double totalIncome;
+  final double totalExpenses;
+
+  const RunningBalanceSummary({
+    required this.baseBalance,
+    required this.totalIncome,
+    required this.totalExpenses,
+  });
+
+  double get runningBalance => baseBalance + totalIncome - totalExpenses;
+}
+
 /// Finance Service — Handles all Firestore CRUD operations for transactions
-/// Transactions are stored in users/{uid}/transactions collection
+/// Transactions are stored in users/{uid}/transactions collecthion
 class FinanceService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -43,6 +60,92 @@ class FinanceService {
       'email': user.email ?? '',
       'createdAt': FieldValue.serverTimestamp(),
       'preferences': <String, dynamic>{},
+      'baseBalance': 0.0,
+    });
+  }
+
+  double _readBaseBalance(Map<String, dynamic>? data) {
+    return (data?['baseBalance'] as num?)?.toDouble() ?? 0.0;
+  }
+
+  ({double income, double expenses}) _totalsFromSnapshot(
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) {
+    double income = 0.0;
+    double expenses = 0.0;
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
+      if (data['type'] == 'income') {
+        income += amount;
+      } else if (data['type'] == 'expense') {
+        expenses += amount;
+      }
+    }
+
+    return (income: income, expenses: expenses);
+  }
+
+  /// Real-time stream of the user's starting balance (defaults to 0)
+  Stream<double> getBaseBalance() {
+    return _userDoc.snapshots().map((snapshot) {
+      return _readBaseBalance(snapshot.data());
+    });
+  }
+
+  /// Persist a new base balance on the user document
+  Future<void> updateBaseBalance(double newBalance) async {
+    try {
+      await _ensureUserDocument();
+      await _userDoc.set(
+        {'baseBalance': newBalance},
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      _rethrowFirestoreError(e, 'update base balance');
+    }
+  }
+
+  /// Running balance = baseBalance + totalIncome - totalExpenses
+  Stream<RunningBalanceSummary> watchRunningBalance() {
+    return Stream.multi((controller) {
+      double baseBalance = 0.0;
+      QuerySnapshot<Map<String, dynamic>>? transactionsSnapshot;
+
+      void emitSummary() {
+        if (transactionsSnapshot == null) return;
+
+        final totals = _totalsFromSnapshot(transactionsSnapshot!);
+        controller.add(
+          RunningBalanceSummary(
+            baseBalance: baseBalance,
+            totalIncome: totals.income,
+            totalExpenses: totals.expenses,
+          ),
+        );
+      }
+
+      final userSubscription = _userDoc.snapshots().listen(
+        (snapshot) {
+          baseBalance = _readBaseBalance(snapshot.data());
+          emitSummary();
+        },
+        onError: controller.addError,
+      );
+
+      final transactionsSubscription = _transactionsCollection.snapshots().listen(
+        (snapshot) {
+          transactionsSnapshot = snapshot;
+          emitSummary();
+        },
+        onError: controller.addError,
+      );
+
+      controller.onCancel = () async {
+        await userSubscription.cancel();
+        await transactionsSubscription.cancel();
+      };
     });
   }
 

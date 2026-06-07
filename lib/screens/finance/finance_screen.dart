@@ -20,6 +20,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
   late TextEditingController _titleController;
   late TextEditingController _amountController;
   late TextEditingController _budgetLimitController;
+  late TextEditingController _baseBalanceController;
   String _selectedType = 'expense';
   String _selectedCategory = 'Food & Dining';
   bool _isSavingBudget = false;
@@ -44,6 +45,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
     _titleController = TextEditingController();
     _amountController = TextEditingController();
     _budgetLimitController = TextEditingController();
+    _baseBalanceController = TextEditingController();
   }
 
   @override
@@ -51,7 +53,91 @@ class _FinanceScreenState extends State<FinanceScreen> {
     _titleController.dispose();
     _amountController.dispose();
     _budgetLimitController.dispose();
+    _baseBalanceController.dispose();
     super.dispose();
+  }
+
+  String _formatCurrency(double amount) {
+    final formatted = amount.toStringAsFixed(2);
+    final parts = formatted.split('.');
+    final whole = parts[0].replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (match) => '${match[1]},',
+    );
+    return 'RM $whole.${parts[1]}';
+  }
+
+  void _showEditBaseBalanceDialog(double currentBaseBalance) {
+    _baseBalanceController.text = currentBaseBalance.toStringAsFixed(2);
+    var isSaving = false;
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          Future<void> saveBaseBalance() async {
+            final value = double.tryParse(_baseBalanceController.text.trim());
+            if (value == null) {
+              _showSnackBar(
+                'Please enter a valid amount',
+                backgroundColor: Colors.red.shade700,
+              );
+              return;
+            }
+
+            setDialogState(() => isSaving = true);
+
+            try {
+              await _financeService.updateBaseBalance(value);
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+              if (!mounted) return;
+              _showSnackBar('Base balance updated');
+            } catch (e) {
+              if (!mounted) return;
+              _showSnackBar(
+                e.toString().replaceFirst('Exception: ', ''),
+                backgroundColor: Colors.red.shade700,
+              );
+            } finally {
+              if (dialogContext.mounted) {
+                setDialogState(() => isSaving = false);
+              }
+            }
+          }
+
+          return AlertDialog(
+            title: const Text('Edit Base Balance'),
+            content: TextField(
+              controller: _baseBalanceController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'New balance (RM)',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+              enabled: !isSaving,
+            ),
+            actions: [
+              TextButton(
+                onPressed: isSaving ? null : () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: isSaving ? null : saveBaseBalance,
+                child: isSaving
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Save'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   void _showSnackBar(String message, {Color? backgroundColor}) {
@@ -515,7 +601,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
     final scaffoldBg = isDark ? const Color(0xFF0F0F1A) : const Color(0xFFf2f3f7);
     final outlineColor = isDark ? const Color(0xFF727782) : const Color(0xFFc2c6d2);
     final primaryContainer = const Color(0xFF185FA5);
-    final primary = const Color(0xFF004782);
 
     return Scaffold(
       backgroundColor: scaffoldBg,
@@ -569,64 +654,119 @@ class _FinanceScreenState extends State<FinanceScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Summary Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: primaryContainer,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 4))],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Live running balance card
+            StreamBuilder<RunningBalanceSummary>(
+              stream: _financeService.watchRunningBalance(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Container(
+                    width: double.infinity,
+                    height: 140,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: primaryContainer,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: const CircularProgressIndicator(color: Colors.white),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: primaryContainer,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Text(
+                      'Could not load balance: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  );
+                }
+
+                final summary = snapshot.data ??
+                    const RunningBalanceSummary(
+                      baseBalance: 0,
+                      totalIncome: 0,
+                      totalExpenses: 0,
+                    );
+
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: primaryContainer,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Column(
+                      Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Total Balance', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                          const SizedBox(height: 4),
-                          const Text('RM 14,250.00', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: -0.5)),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Total Balance',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _formatCurrency(summary.runningBalance),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              _showEditBaseBalanceDialog(summary.baseBalance);
+                            },
+                            icon: const Icon(
+                              Icons.edit_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            tooltip: 'Edit base balance',
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.white.withOpacity(0.2),
+                            ),
+                          ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.arrow_upward_rounded, color: Color(0xFF9dd770), size: 14),
-                            const SizedBox(width: 2),
-                            const Text('+4.2%', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
-                          ],
+                      const SizedBox(height: 16),
+                      Text(
+                        'Base ${_formatCurrency(summary.baseBalance)} · '
+                        'Income ${_formatCurrency(summary.totalIncome)} · '
+                        'Expenses ${_formatCurrency(summary.totalExpenses)}',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    height: 60,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        _chartBar('Mon', 0.4, false),
-                        _chartBar('Tue', 0.6, false),
-                        _chartBar('Wed', 0.3, false),
-                        _chartBar('Thu', 0.8, false),
-                        _chartBar('Fri', 1.0, true),
-                        _chartBar('Sat', 0.5, false),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
             const SizedBox(height: 24),
 
@@ -765,29 +905,4 @@ class _FinanceScreenState extends State<FinanceScreen> {
     );
   }
 
-  Widget _chartBar(String label, double heightRatio, bool isToday) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Container(
-          width: 30,
-          height: 40 * heightRatio,
-          decoration: BoxDecoration(
-            color: isToday ? Colors.white : Colors.white.withOpacity(0.3),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-            boxShadow: isToday ? [BoxShadow(color: Colors.white.withOpacity(0.3), blurRadius: 8)] : null,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: isToday ? Colors.white : Colors.white70,
-            fontSize: 11,
-            fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
 }
