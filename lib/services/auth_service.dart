@@ -1,5 +1,6 @@
 /// Authentication Service — Firebase Auth wrapper
 /// Handles email/password auth, Google Sign-In, and password reset
+library;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -47,27 +48,15 @@ class AuthService {
   }
 
   /// Sign in with Google account
+  /// Uses signInWithPopup for web (Flutter Web requires this approach)
   Future<UserCredential> signInWithGoogle() async {
     try {
-      // Trigger the Google Sign-In flow
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      final googleProvider = GoogleAuthProvider();
+      googleProvider.addScope('email');
+      googleProvider.addScope('profile');
 
-      if (googleUser == null) {
-        throw Exception('Google Sign-In was cancelled');
-      }
-
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      // Create a new credential
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      // Sign in to Firebase with the Google credential
-      return await _auth.signInWithCredential(credential);
+      // signInWithPopup works correctly on Flutter Web
+      return await _auth.signInWithPopup(googleProvider);
     } on FirebaseAuthException catch (e) {
       throw _handleAuthError(e);
     } catch (e) {

@@ -1,1 +1,28 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"allinone-app-3c707","appId":"1:1014697157501:android:5cdc5f64731e7ba760e214","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"allinone-app-3c707","configurations":{"android":"1:1014697157501:android:5cdc5f64731e7ba760e214","ios":"1:1014697157501:ios:1fc962aeb83fda7260e214","macos":"1:1014697157501:ios:1fc962aeb83fda7260e214","web":"1:1014697157501:web:0daedc47ecc0fa5360e214","windows":"1:1014697157501:web:b71462dd4a1650d160e214"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "allinone-app-3c707",
+          "appId": "1:1014697157501:android:5cdc5f64731e7ba760e214",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "allinone-app-3c707",
+          "configurations": {
+            "android": "1:1014697157501:android:5cdc5f64731e7ba760e214",
+            "ios": "1:1014697157501:ios:1fc962aeb83fda7260e214",
+            "macos": "1:1014697157501:ios:1fc962aeb83fda7260e214",
+            "web": "1:1014697157501:web:0daedc47ecc0fa5360e214",
+            "windows": "1:1014697157501:web:b71462dd4a1650d160e214"
+          }
+        }
+      }
+    }
+  }
+}
