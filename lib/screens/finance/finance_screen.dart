@@ -554,6 +554,20 @@ class _FinanceScreenState extends State<FinanceScreen> {
     }
   }
 
+  Future<void> _swipeDeleteTransaction(TransactionModel transaction) async {
+    try {
+      await _financeService.deleteTransaction(transaction.id);
+      if (!mounted) return;
+      _showSnackBar('Transaction deleted successfully');
+    } catch (e) {
+      if (!mounted) return;
+      _showSnackBar(
+        e.toString().replaceFirst('Exception: ', ''),
+        backgroundColor: Colors.red.shade700,
+      );
+    }
+  }
+
   /// Delete transaction with confirmation
   void _deleteTransaction(String id) async {
     Navigator.pop(context);
@@ -829,48 +843,82 @@ class _FinanceScreenState extends State<FinanceScreen> {
                           final iconColor = isIncome ? const Color(0xFF137333) : Colors.red;
                           final iconBg = isIncome ? const Color(0xFFE6F4EA) : const Color(0xFFFFEFE5);
 
-                          return GestureDetector(
-                            onTap: () => _showTransactionForm(transaction: transaction),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
-                                  child: Icon(
-                                    isIncome ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-                                    color: iconColor,
-                                    size: 24,
+                          return Dismissible(
+                            key: ValueKey(transaction.id),
+                            direction: DismissDirection.horizontal,
+                            background: _dismissBackground(Alignment.centerLeft),
+                            secondaryBackground:
+                                _dismissBackground(Alignment.centerRight),
+                            onDismissed: (_) =>
+                                _swipeDeleteTransaction(transaction),
+                            child: GestureDetector(
+                              onTap: () =>
+                                  _showTransactionForm(transaction: transaction),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: iconBg,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      isIncome
+                                          ? Icons.arrow_downward_rounded
+                                          : Icons.arrow_upward_rounded,
+                                      color: iconColor,
+                                      size: 24,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(transaction.title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
-                                      const SizedBox(height: 2),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            transaction.category,
-                                            style: TextStyle(fontSize: 12, color: subtextColor),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          transaction.title,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: textColor,
                                           ),
-                                          Text(
-                                            '${DateTime.now().difference(transaction.date).inDays}d ago',
-                                            style: TextStyle(fontSize: 12, color: subtextColor),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              transaction.category,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: subtextColor,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${DateTime.now().difference(transaction.date).inDays}d ago',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: subtextColor,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  '$amountSign RM ${transaction.amount.toStringAsFixed(2)}',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: amountColor),
-                                ),
-                              ],
+                                  Text(
+                                    '$amountSign RM ${transaction.amount.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: amountColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         },
@@ -905,4 +953,16 @@ class _FinanceScreenState extends State<FinanceScreen> {
     );
   }
 
+  Widget _dismissBackground(Alignment alignment) {
+    return Container(
+      alignment: alignment,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.red.shade700,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
+    );
+  }
 }
