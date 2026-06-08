@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:async'; // Needed for future and stream.
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,7 +6,7 @@ import '../models/budget_model.dart';
 import '../models/transaction_model.dart';
 
 /// Live balance snapshot: baseBalance + income - expenses
-class RunningBalanceSummary {
+class RunningBalanceSummary { 
   final double baseBalance;
   final double totalIncome;
   final double totalExpenses;
@@ -17,17 +17,17 @@ class RunningBalanceSummary {
     required this.totalExpenses,
   });
 
-  double get runningBalance => baseBalance + totalIncome - totalExpenses;
+  double get runningBalance => baseBalance + totalIncome - totalExpenses; // Not a hardcoded variable. This is so when UI asks for runningbalance, it gives the instantenous value.
 }
 
 /// Finance Service — Handles all Firestore CRUD operations for transactions
 /// Transactions are stored in users/{uid}/transactions collecthion
 class FinanceService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance; // Allows CRUD operations in firebase
+  final FirebaseAuth _auth = FirebaseAuth.instance; // Use current connection instead of making a new one
 
   String get _uid {
-    final uid = _auth.currentUser?.uid;
+    final uid = _auth.currentUser?.uid; // Remember to use ? for safety, otherwise it'll crash if null.
     if (uid == null) {
       throw Exception('You must be logged in to save finance data');
     }
@@ -35,11 +35,11 @@ class FinanceService {
   }
 
   DocumentReference<Map<String, dynamic>> get _userDoc =>
-      _firestore.collection('users').doc(_uid);
+      _firestore.collection('users').doc(_uid); // Set uid under _userDoc. Crucial to prevent users overwriting each other.
 
   /// Get reference to user's transactions collection
   CollectionReference<Map<String, dynamic>> get _transactionsCollection =>
-      _userDoc.collection('transactions');
+      _userDoc.collection('transactions'); 
 
   /// Get reference to user's budgets collection
   CollectionReference<Map<String, dynamic>> get _budgetsCollection =>
@@ -47,23 +47,23 @@ class FinanceService {
 
   /// Ensures the parent user document exists before writing subcollections
   Future<void> _ensureUserDocument() async {
-    final user = _auth.currentUser;
-    if (user == null) {
+    final user = _auth.currentUser; //Eventhough we already checked at the top
+    if (user == null) {              // good backend practice to keep checking everytime.
       throw Exception('You must be logged in to save finance data');
     }
 
-    final snapshot = await _userDoc.get();
-    if (snapshot.exists) return;
+    final snapshot = await _userDoc.get(); // Check if the user already exists.
+    if (snapshot.exists) return;  
 
-    await _userDoc.set({
+    await _userDoc.set({ // Set new user's profile.
       'name': user.displayName ?? 'User',
       'email': user.email ?? '',
-      'createdAt': FieldValue.serverTimestamp(),
-      'preferences': <String, dynamic>{},
+      'createdAt': FieldValue.serverTimestamp(), // DateTime.now() relies on the user's phone clock (could be altered).
+      'preferences': <String, dynamic>{},        // .serverTimeStamp() takes the time this file arrives at Google server.
       'baseBalance': 0.0,
     });
   }
-
+  // CheckPoint
   double _readBaseBalance(Map<String, dynamic>? data) {
     return (data?['baseBalance'] as num?)?.toDouble() ?? 0.0;
   }
@@ -193,7 +193,7 @@ class FinanceService {
 
   /// Get real-time stream of all transactions ordered by date (descending)
   /// Automatically rebuilds the UI whenever transactions change
-  Stream<List<TransactionModel>> getTransactions() {
+  Stream<List<TransactionModel>> getTransactions() { 
     return _transactionsCollection
         .orderBy('date', descending: true)
         .snapshots()
