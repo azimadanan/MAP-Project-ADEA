@@ -63,7 +63,7 @@ class FinanceService {
       'baseBalance': 0.0,
     });
   }
-  // CheckPoint
+  // CheckPoint: Read/Study about future, async, and await. Then continue here.
   double _readBaseBalance(Map<String, dynamic>? data) {
     return (data?['baseBalance'] as num?)?.toDouble() ?? 0.0;
   }
