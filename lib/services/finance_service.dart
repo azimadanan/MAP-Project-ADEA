@@ -63,19 +63,19 @@ class FinanceService {
       'baseBalance': 0.0,
     });
   }
-  // CheckPoint: Read/Study about future, async, and await. Then continue here.
-  double _readBaseBalance(Map<String, dynamic>? data) {
+
+  double _readBaseBalance(Map<String, dynamic>? data) { // Helper function (used below) - it's just a function: [return type] [function name] ([argument type] [parameter]) {Implementation}
     return (data?['baseBalance'] as num?)?.toDouble() ?? 0.0;
   }
 
-  ({double income, double expenses}) _totalsFromSnapshot(
-    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ({double income, double expenses}) _totalsFromSnapshot( // Record (introduced in Dart v3): Can return 2 things at once.
+    QuerySnapshot<Map<String, dynamic>> snapshot, //DocumentSnapshot: single file, QuerySnapshot: a folder of files.
   ) {
     double income = 0.0;
     double expenses = 0.0;
-
-    for (final doc in snapshot.docs) {
-      final data = doc.data();
+                                        // .data() is for DocumentSnapshot - one "paper"
+    for (final doc in snapshot.docs) {  // QuerySnapsot is a folder, so you use a for loop to pull out each individual "paper"
+      final data = doc.data();          // now data holds a single "paper", we can use .data() to read it.
       final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
       if (data['type'] == 'income') {
         income += amount;
@@ -84,11 +84,12 @@ class FinanceService {
       }
     }
 
-    return (income: income, expenses: expenses);
-  }
+    return (income: income, expenses: expenses); // ':' is a label matcher (used in Records, Maps, and Constructors). 
+  }                                              //  Matches the income variable in computer memory to income: in this record package.
 
+  // CHECKPOINT
   /// Real-time stream of the user's starting balance (defaults to 0)
-  Stream<double> getBaseBalance() {
+  Stream<double> getBaseBalance() { // Stream: watches for changes in database and updates immediately. Paired with StreamBuilder in UI.
     return _userDoc.snapshots().map((snapshot) {
       return _readBaseBalance(snapshot.data());
     });
