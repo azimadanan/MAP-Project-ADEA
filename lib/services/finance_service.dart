@@ -87,7 +87,6 @@ class FinanceService {
     return (income: income, expenses: expenses); // ':' is a label matcher (used in Records, Maps, and Constructors). 
   }                                              //  Matches the income variable in computer memory to income: in this record package.
 
-  // CHECKPOINT
   /// Real-time stream of the user's starting balance (defaults to 0)
   Stream<double> getBaseBalance() { // Stream: watches for changes in database and updates immediately. Paired with StreamBuilder in UI.
     return _userDoc.snapshots().map((snapshot) {
@@ -97,14 +96,14 @@ class FinanceService {
 
   /// Persist a new base balance on the user document
   Future<void> updateBaseBalance(double newBalance) async {
-    try {
-      await _ensureUserDocument();
-      await _userDoc.set(
-        {'baseBalance': newBalance},
-        SetOptions(merge: true),
+    try { // Whenever you use await to talk to the internet, you should wrap it in a try / catch block.
+      await _ensureUserDocument(); // Because of the await keyword, the code literally pauses here. It will not move to the next line until it guarantees the folder exists.
+      await _userDoc.set( // By default, .set() acts like a bulldozer. If you tell it to set the baseBalance, it will completely wipe out the user's entire folder (deleting their name, email, and preferences) and replace it with a folder that only contains a baseBalance.
+        {'baseBalance': newBalance}, // To prevent that, we add SetOptions(merge: true). This changes the bulldozer into a surgical scalpel. It tells Firebase: "Open the folder, find the sticky note labeled 'baseBalance', and update just that one number. Leave their name, email, and everything else exactly as it is."
+        SetOptions(merge: true), // Crucial
       );
     } catch (e) {
-      _rethrowFirestoreError(e, 'update base balance');
+      _rethrowFirestoreError(e, 'update base balance'); // Helper function
     }
   }
 
@@ -150,16 +149,16 @@ class FinanceService {
     });
   }
 
-  Never _rethrowFirestoreError(Object e, String action) {
+  Never _rethrowFirestoreError(Object e, String action) { // Helper function for errors
     if (e is FirebaseException) {
       if (e.code == 'permission-denied') {
         throw Exception(
           'Permission denied. Deploy Firestore rules: firebase deploy --only firestore:rules',
         );
       }
-      throw Exception('Failed to $action: ${e.message ?? e.code}');
-    }
-    throw Exception('Failed to $action: ${e.toString()}');
+      throw Exception('Failed to $action: ${e.message ?? e.code}'); // the ":" is just a colon (it's in quotes).
+    }                                                               // Reminder: "$" is for string interpolation. If it is a complex action that requires math or digging into an object, you wrap it in brackets: ${e.message}. This tells Dart, "Wait, before you print this, do the calculation inside the brackets first."
+    throw Exception('Failed to $action: ${e.toString()}'); // Every single object in Dart has a .toString() method built into it. It is a universal command that forces the object to translate itself into text as best as it can so you can print it to the screen and figure out what went wrong.
   }
 
   /// Add a new transaction to Firestore
