@@ -108,16 +108,16 @@ class FinanceService {
   }
 
   /// Running balance = baseBalance + totalIncome - totalExpenses
-  Stream<RunningBalanceSummary> watchRunningBalance() {
-    return Stream.multi((controller) {
+  Stream<RunningBalanceSummary> watchRunningBalance() { //RunningBalanceSummary: class defined at the top
+    return Stream.multi((controller) { // Stream.multi: for watching multiple things.
       double baseBalance = 0.0;
-      QuerySnapshot<Map<String, dynamic>>? transactionsSnapshot;
+      QuerySnapshot<Map<String, dynamic>>? transactionsSnapshot;  // transactionsSnapshot is the folder containing every single transaction you have ever made.
 
       void emitSummary() {
         if (transactionsSnapshot == null) return;
 
-        final totals = _totalsFromSnapshot(transactionsSnapshot!);
-        controller.add(
+        final totals = _totalsFromSnapshot(transactionsSnapshot!); // "!" is the bang operator. it assures the compiler that the value is not null.
+        controller.add( // controller is inbuilt to flutter/dart.
           RunningBalanceSummary(
             baseBalance: baseBalance,
             totalIncome: totals.income,
@@ -149,6 +149,7 @@ class FinanceService {
     });
   }
 
+  // Never: It 'never' returns because all ends of this function throws an exception. It aborts the program.
   Never _rethrowFirestoreError(Object e, String action) { // Helper function for errors
     if (e is FirebaseException) {
       if (e.code == 'permission-denied') {
@@ -164,8 +165,8 @@ class FinanceService {
   /// Add a new transaction to Firestore
   Future<String> addTransaction(TransactionModel transaction) async {
     try {
-      await _ensureUserDocument();
-      final docRef = await _transactionsCollection.add(transaction.toMap());
+      await _ensureUserDocument(); // Double check user id again.
+      final docRef = await _transactionsCollection.add(transaction.toMap()); // .toMap(): converts the dart object to a raw dictionary (JSON Format) so firebase can read it.
       return docRef.id;
     } catch (e) {
       _rethrowFirestoreError(e, 'add transaction');
@@ -183,9 +184,9 @@ class FinanceService {
   }
 
   /// Delete a transaction by ID
-  Future<void> deleteTransaction(String transactionId) async {
-    try {
-      await _transactionsCollection.doc(transactionId).delete();
+  Future<void> deleteTransaction(String transactionId) async {     // When you want to delete a transaction, you don't care about the title, the amount, or the date. 
+    try {                                                          // You literally just want to throw the file in the shredder. Passing the entire TransactionModel would be a waste of memory. 
+      await _transactionsCollection.doc(transactionId).delete();   // The UI just hands the Waiter a tiny scrap of paper with the ID written on it (a String), and the Waiter hands that directly to the .doc() command.
     } catch (e) {
       _rethrowFirestoreError(e, 'delete transaction');
     }
@@ -194,14 +195,14 @@ class FinanceService {
   /// Get real-time stream of all transactions ordered by date (descending)
   /// Automatically rebuilds the UI whenever transactions change
   Stream<List<TransactionModel>> getTransactions() { 
-    return _transactionsCollection
+    return _transactionsCollection // In case of confusion: This entire block is one sentence, that's why return is at the top.
         .orderBy('date', descending: true)
         .snapshots()
-        .map((querySnapshot) {
+        .map((querySnapshot) { // querySnapshot is an anonymous function.
       return querySnapshot.docs
           .map((doc) => TransactionModel.fromMap(doc.data(), doc.id))
           .toList();
-    }).handleError((e) {
+    }).handleError((e) { // You can't use try / catch in Stream cause it never closes. it's basically the stream version of a try / catch block.
       throw Exception('Failed to fetch transactions: ${e.toString()}');
     });
   }
