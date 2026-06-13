@@ -3,33 +3,32 @@ import '../../models/budget_model.dart';
 import '../../models/transaction_model.dart';
 import '../../services/finance_service.dart';
 
-/// Updated Finance Screen with CRUD operations
-class FinanceScreen extends StatefulWidget {
-  const FinanceScreen({super.key});
+class FinanceScreen extends StatefulWidget {  // Standard format, memorize for now.
+  const FinanceScreen({super.key}); // When the rest of your app wants to navigate to this page, it calls this constructor.
 
   @override
-  State<FinanceScreen> createState() => _FinanceScreenState();
-}
+  State<FinanceScreen> createState() => _FinanceScreenState(); // What this does: Whenever someone opens the FinanceScreen front door, 
+}                                                              // immediately create the private _FinanceScreenState back room, and link them together.
 
 class _FinanceScreenState extends State<FinanceScreen> {
-  late FinanceService _financeService;
-  final _formKey = GlobalKey<FormState>();
-  final _budgetFormKey = GlobalKey<FormState>();
+  late FinanceService _financeService;            // late: It will be assigned a value before the UI uses it.
+  final _formKey = GlobalKey<FormState>();        // Will be initialized in initState() later.
+  final _budgetFormKey = GlobalKey<FormState>();  // GlobalKey: for checking errors later.
 
   // Form fields
-  late TextEditingController _titleController;
+  late TextEditingController _titleController;       // TextEditingController: a listener. Like a "spy" that monitors what the user inputs.
   late TextEditingController _amountController;
   late TextEditingController _budgetLimitController;
   late TextEditingController _baseBalanceController;
-  String _selectedType = 'expense';
-  String _selectedCategory = 'Food & Dining';
+  String _selectedType = 'expense';                  // Trackers: When your screen opens, the dropdown menus need a default value to show. These variables hold the default choices. 
+  String _selectedCategory = 'Food & Dining';        // If the user clicks the dropdown and changes it to "income," the UI will update this variable to remember their new choice.
   bool _isSavingBudget = false;
   bool _isSavingTransaction = false;
 
-  final List<String> _categories = [
-    'Food & Dining',
+  final List<String> _categories = [ // Square brackets "[]": for lists
+    'Food & Dining',                 // Curly brackets "{}": Maps or Sets 
     'Transport',
-    'Shopping',
+    'Shopping',                      // _categories is gonna be the dropdown list later.
     'Housing',
     'Entertainment',
     'Utilities',
@@ -39,10 +38,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
   final List<String> _types = ['income', 'expense'];
 
   @override
-  void initState() {
-    super.initState();
-    _financeService = FinanceService();
-    _titleController = TextEditingController();
+  void initState() { // initState runs before any pixel is painted by the screen.
+    super.initState(); // FYI: super is short for superclass.
+    _financeService = FinanceService();  // utilizing finance_service.dart code
+    _titleController = TextEditingController(); 
     _amountController = TextEditingController();
     _budgetLimitController = TextEditingController();
     _baseBalanceController = TextEditingController();
@@ -50,11 +49,11 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   @override
   void dispose() {
-    _titleController.dispose();
-    _amountController.dispose();
-    _budgetLimitController.dispose();
+    _titleController.dispose();         // triggered once the screen (finance screen) is destroyed.
+    _amountController.dispose();        // if not, the controllers will eat up the memory.
+    _budgetLimitController.dispose();   // .dispose(): must actively remove the controllers. removed from memory. Basically, memory management.
     _baseBalanceController.dispose();
-    super.dispose();
+    super.dispose(); // Golden Rule: super.iniState() - FIRST line, super.dispose() - LAST line.
   }
 
   String _formatCurrency(double amount) {
