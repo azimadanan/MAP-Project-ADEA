@@ -228,7 +228,7 @@ class FinanceService {
         .where('category', isEqualTo: category)
         .orderBy('date', descending: true)
         .snapshots()
-        .map((querySnapshot) {
+        .map((querySnapshot) { // Anonymous function: no function name, just the argument (in parantheses), and body.
       return querySnapshot.docs
           .map((doc) => TransactionModel.fromMap(doc.data(), doc.id))
           .toList();
