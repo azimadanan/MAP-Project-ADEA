@@ -39,7 +39,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _transactionsStream = _financeService.getTransactions();
     _goalsStream = _goalService.getGoals();
     _urgentReminderStream = _reminderService.getMostUrgentReminder();
-    _runningBalanceStream = _financeService.watchRunningBalance();
+    _runningBalanceStream = _financeService.watchRunningBalance().map((summary) => summary.runningBalance);
   }
 
   // ─── FAB Speed Dial bottom sheet ───────────────────────────────────
