@@ -1,40 +1,77 @@
-# allinone_app
+# 🌟 AllInOne — Personal Productivity & Finance Dashboard
 
-> 🚧 **Project Status: Work in Progress**
-> This project is currently under active development. Features are frequently being added.
+AllInOne is a comprehensive personal management and productivity application designed to help users streamline their daily lives. By combining secure user accounts, dynamic finance tracking, automated budgets, task management with calendar integration, and interactive goal tracking, AllInOne serves as a premium, unified hub for everyday efficiency.
 
-This is a personal management app. It will have automated finance tracking, and goals and tasks tracking. It is designed with the intent to assist any individual with their everyday tasks and managing productivity. The initial target group were students like ourselves, but this app could be used by anyone trying to get their hectic daily lives in order. We hope that this app could be of assistance. 
+> 🚀 **Current Status:** Sprint 1, 2, and 3 are fully completed. Sprint 4 (Premium Features & Advanced Insights) is currently in progress.
 
-## 🧰 Tech Stack
-- **Fullstack:** Flutter
-- **Database:** Firebase
+---
 
-## 🏗️ Roadmap & Progress
-- [x] Login & Authentication (Completed)
-- [x] Goals & Tasks Management (Completed)
-- [ ] Login with Google (Planned)
-- [ ] Real-Time Finance Tracker (In Progress)
-- [ ] Live Dashboard (Planned)
-- [ ] Profile management (Planned)
-- [ ] UI/UX upgrades (Planned)
+## 📸 Key Features
 
-## ⚙️Local Setup (Experimental)
-If you want to run the development version locally:
+### 👤 Secure User Accounts & Customization (Sprint 1)
+*   **Secure Authentication:** Log in safely using email/password or Google Sign-In.
+*   **Onboarding Flow (Sprint 2):** A guided, multi-page onboarding walkthrough introducing key features to new users.
+*   **Profile Management:** Access user details, toggle app-wide Dark Mode/Light Mode settings, and set daily notification preferences.
 
-1. Clone the repo:
-   ```bash
-   git clone git clone [https://github.com/YOUR-USERNAME/MAP-Project-ADEA-main.git]                    (https://github.com/YOUR-USERNAME/MAP-Project-ADEA-main.git)
-   ```
-2. Install dependencies:
-   ```bash
-   flutter pub get
-   ```
-3. Run the app:
-   ```
-   flutter run
-   ```
-   or to directly run on chrome (or whatever browser you prefer, just replace chrome in the code       below)
-   ```
-   flutter run -d chrome
-   ```
+### 💰 Finance Tracking & Automation (Sprint 1 & 2)
+*   **Manual Recurring Transactions (Bank API Replacement):** Easily set up, track, and manage weekly, monthly, or yearly bills.
+*   **Budgeting:** Establish monthly budget limits by category with automatic notifications/alerts when overspending.
+*   **Auto-Categorization:** Input transactions and watch categories auto-select using smart title keyword heuristics (e.g., "KFC" maps to *Food & Dining*, "Grab" to *Transport*).
 
+### 📋 Task Management (Sprint 1 & 2)
+*   **Daily Tasks CRUD:** Create, toggle completion, and swipe to delete everyday tasks.
+*   **Calendar View:** Seamless integration with `table_calendar` to display task markers on due dates.
+*   **Due Dates & Reminders:** Set custom due dates with individual local reminders for each task.
+
+### 🎯 Goal Tracking & Insights (Sprint 2 & 3)
+*   **Goal Progress Indicators:** Visualize progress with dynamic, color-coded progress bars.
+*   **Personalized Coaching/Feedback:** Context-aware feedback based on goal pace, target dates, and progress percentage.
+*   **Smart Daily Summary (Sprint 3):** Receive an automated daily summary notification of total expenses at 8:00 PM.
+
+---
+
+## 🧰 Tech Stack & Packages
+*   **Frontend Framework:** Flutter (Dart)
+*   **State Management:** BLoC / Cubit
+*   **Backend & DB:** Firebase (Auth, Firestore)
+*   **Notification Engine:** `flutter_local_notifications`
+*   **UI/UX Packages:** `table_calendar`, `fl_chart`, `google_fonts`
+
+---
+
+## 🏗️ Roadmap & Sprint Status
+
+| Sprint | Feature Area | Status | Notes |
+|---|---|---|---|
+| **Sprint 1** | Foundation | ✅ Completed | Auth, Basic Finance, Auto-Categorization, Tasks, Navigation |
+| **Sprint 2** | Core Features | ✅ Completed | Onboarding Flow, Financial Summaries, Task Calendar, Reminders |
+| **Sprint 3** | Engagement | ✅ Completed | Goal visual progress, coaching feedback, Daily Notifications |
+| **Sprint 4** | Premium & Polish | 🛠️ In Progress | Premium upgrade flows, Cashflow Trends charts, AI-based insights |
+
+---
+
+## ⚙️ Local Setup
+
+Follow these steps to run the development version of the application locally:
+
+### Prerequisites
+*   Flutter SDK installed (v3.0.0 or higher recommended)
+*   An emulator, simulator, or physical test device connected
+
+### Steps
+1.  **Clone the Repository:**
+    ```bash
+    git clone https://github.com/azimadanan/MAP-Project-ADEA.git
+    ```
+2.  **Install Dependencies:**
+    ```bash
+    flutter pub get
+    ```
+3.  **Run the App:**
+    ```bash
+    flutter run
+    ```
+    To run specifically on Google Chrome:
+    ```bash
+    flutter run -d chrome
+    ```
