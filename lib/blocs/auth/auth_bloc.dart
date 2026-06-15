@@ -43,6 +43,46 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
   }
 
+  Future<UserModel> _updateStreakIfNecessary(UserModel userModel) async {
+    final now = DateTime.now();
+    final prefs = Map<String, dynamic>.from(userModel.preferences);
+    final lastActiveStr = prefs['lastActiveDate'] as String?;
+    int currentStreak = prefs['streak'] as int? ?? 1;
+
+    final todayStr = "${now.year}-${now.month}-${now.day}";
+    if (lastActiveStr != todayStr) {
+      if (lastActiveStr != null) {
+        final lastActiveParts = lastActiveStr.split('-');
+        if (lastActiveParts.length == 3) {
+          final lastActiveDate = DateTime(
+            int.parse(lastActiveParts[0]),
+            int.parse(lastActiveParts[1]),
+            int.parse(lastActiveParts[2]),
+          );
+          final todayDate = DateTime(now.year, now.month, now.day);
+          final difference = todayDate.difference(lastActiveDate).inDays;
+          if (difference == 1) {
+            currentStreak += 1;
+          } else if (difference > 1) {
+            currentStreak = 1;
+          }
+        }
+      } else {
+        currentStreak = 1;
+      }
+      prefs['lastActiveDate'] = todayStr;
+      prefs['streak'] = currentStreak;
+
+      try {
+        await _userRepository.updateUser(userModel.uid, {'preferences': prefs});
+        return userModel.copyWith(preferences: prefs);
+      } catch (_) {
+        return userModel;
+      }
+    }
+    return userModel;
+  }
+
   /// Handle auth check on app startup
   Future<void> _onAuthCheckRequested(
     AuthCheckRequested event,
@@ -53,16 +93,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       try {
         final userModel = await _userRepository.getUser(user.uid);
         if (userModel != null) {
-          emit(AuthAuthenticated(userModel));
+          final updatedUser = await _updateStreakIfNecessary(userModel);
+          emit(AuthAuthenticated(updatedUser));
         } else {
           // User exists in Auth but not in Firestore — create profile
+          final todayStr = "${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}";
           final newUser = UserModel(
             uid: user.uid,
             name: user.displayName ?? 'User',
             email: user.email ?? '',
             createdAt: user.metadata.creationTime ?? DateTime.now(),
             avatar: user.photoURL,
-            preferences: {},
+            preferences: {
+              'streak': 1,
+              'lastActiveDate': todayStr,
+            },
           );
           await _userRepository.createUser(newUser);
           emit(AuthAuthenticated(newUser));
@@ -74,7 +119,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           email: user.email ?? '',
           createdAt: user.metadata.creationTime ?? DateTime.now(),
           avatar: user.photoURL,
-          preferences: {},
+          preferences: const {},
         )));
       }
     } else {
@@ -92,7 +137,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       try {
         final userModel = await _userRepository.getUser(user.uid);
         if (userModel != null) {
-          emit(AuthAuthenticated(userModel));
+          final updatedUser = await _updateStreakIfNecessary(userModel);
+          emit(AuthAuthenticated(updatedUser));
         } else {
           // Fallback: create from Firebase user data
           emit(AuthAuthenticated(UserModel(
@@ -101,7 +147,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             email: user.email ?? '',
             createdAt: user.metadata.creationTime ?? DateTime.now(),
             avatar: user.photoURL,
-            preferences: {},
+            preferences: const {},
           )));
         }
       } catch (e) {
@@ -111,7 +157,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           email: user.email ?? '',
           createdAt: user.metadata.creationTime ?? DateTime.now(),
           avatar: user.photoURL,
-          preferences: {},
+          preferences: const {},
         )));
       }
     } else {
@@ -173,13 +219,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = credential.user;
       if (user != null) {
         // Save user profile to Firestore
+        final todayStr = "${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}";
         final userModel = UserModel(
           uid: user.uid,
           name: event.name.trim(),
           email: event.email.trim(),
           createdAt: DateTime.now(),
           avatar: null,
-          preferences: {},
+          preferences: {
+            'streak': 1,
+            'lastActiveDate': todayStr,
+          },
         );
         await _userRepository.createUser(userModel);
         emit(AuthAuthenticated(userModel));

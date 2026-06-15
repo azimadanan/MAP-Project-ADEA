@@ -149,7 +149,7 @@ class _AuthGate extends StatelessWidget {
           if (!hasCompletedOnboarding) {
             return const OnboardingScreen();
           }
-          return const HomeScreen();
+          return HomeScreen(key: ValueKey(state.user.uid));
         }
         // AuthUnauthenticated, AuthError, etc.
         return const LoginScreen();

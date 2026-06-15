@@ -173,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                             Container(width: 1, height: 40, color: outlineColor.withOpacity(0.2)),
-                            Expanded(child: _statItem('1', 'Day Streak', textColor, subtextColor)),
+                            Expanded(child: _statItem('${user.preferences['streak'] ?? 1}', 'Day Streak', textColor, subtextColor)),
                           ],
                         ),
                       ),
