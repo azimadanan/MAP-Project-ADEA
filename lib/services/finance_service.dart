@@ -349,4 +349,85 @@ class FinanceService {
       );
     }
   }
+
+  /// Auto-categorize a transaction based on its title using keyword matching.
+  /// Returns the best-matching category, or 'Other' if no match is found.
+  ///
+  /// This implements Sprint 1 ID 2 — automatic expense categorization.
+  /// Uses a simple keyword-based approach that matches common merchant names
+  /// and transaction descriptions to predefined categories.
+  static String autoCategorize(String title) {
+    final lower = title.toLowerCase().trim();
+
+    // Food & Dining keywords
+    const foodKeywords = [
+      'mcdonald', 'kfc', 'pizza', 'starbucks', 'grab food', 'grabfood',
+      'foodpanda', 'restaurant', 'cafe', 'coffee', 'lunch', 'dinner',
+      'breakfast', 'burger', 'sushi', 'nasi', 'makan', 'mamak',
+      'subway', 'domino', 'tealive', 'boba', 'bakery', 'groceries',
+      'grocery', 'supermarket', 'tesco', 'aeon', 'jaya grocer',
+      'mydin', 'village grocer', 'food', 'eat', 'meal',
+    ];
+
+    // Transport keywords
+    const transportKeywords = [
+      'grab', 'uber', 'taxi', 'mrt', 'lrt', 'bus', 'train',
+      'petrol', 'fuel', 'shell', 'petronas', 'parking', 'toll',
+      'touch n go', 'tng', 'highway', 'transit', 'rapidkl',
+      'gas', 'diesel', 'car wash', 'carwash', 'transport',
+    ];
+
+    // Shopping keywords
+    const shoppingKeywords = [
+      'shopee', 'lazada', 'amazon', 'uniqlo', 'h&m', 'zara',
+      'nike', 'adidas', 'mr diy', 'ikea', 'daiso', 'watson',
+      'guardian', 'sephora', 'shopping', 'mall', 'cloth', 'shoes',
+      'bag', 'accessory', 'fashion', 'online shop',
+    ];
+
+    // Housing keywords
+    const housingKeywords = [
+      'rent', 'rental', 'mortgage', 'house', 'apartment', 'condo',
+      'maintenance', 'property', 'landlord', 'tenancy', 'housing',
+      'room', 'accommodation',
+    ];
+
+    // Entertainment keywords
+    const entertainmentKeywords = [
+      'netflix', 'spotify', 'youtube', 'disney', 'hbo', 'cinema',
+      'movie', 'tgv', 'gsc', 'game', 'playstation', 'xbox',
+      'steam', 'concert', 'ticket', 'entertainment', 'subscribe',
+      'subscription', 'apple music', 'gym', 'fitness',
+    ];
+
+    // Utilities keywords
+    const utilitiesKeywords = [
+      'electric', 'tenaga', 'tnb', 'water', 'wifi', 'internet',
+      'phone', 'digi', 'maxis', 'celcom', 'unifi', 'astro',
+      'bill', 'utility', 'utilities', 'indah water', 'syabas',
+      'telco', 'broadband', 'postpaid', 'prepaid',
+    ];
+
+    // Check each category (order matters — more specific first)
+    for (final keyword in foodKeywords) {
+      if (lower.contains(keyword)) return 'Food & Dining';
+    }
+    for (final keyword in entertainmentKeywords) {
+      if (lower.contains(keyword)) return 'Entertainment';
+    }
+    for (final keyword in shoppingKeywords) {
+      if (lower.contains(keyword)) return 'Shopping';
+    }
+    for (final keyword in housingKeywords) {
+      if (lower.contains(keyword)) return 'Housing';
+    }
+    for (final keyword in utilitiesKeywords) {
+      if (lower.contains(keyword)) return 'Utilities';
+    }
+    for (final keyword in transportKeywords) {
+      if (lower.contains(keyword)) return 'Transport';
+    }
+
+    return 'Other';
+  }
 }

@@ -10,6 +10,7 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'screens/onboarding/onboarding_screen.dart';
 
 /// AllInOneApp — Root application widget with BLoC, theme, and routing
 class AllInOneApp extends StatelessWidget {
@@ -143,6 +144,11 @@ class _AuthGate extends StatelessWidget {
           return const SplashScreen();
         }
         if (state is AuthAuthenticated) {
+          final hasCompletedOnboarding =
+              state.user.preferences['hasCompletedOnboarding'] == true;
+          if (!hasCompletedOnboarding) {
+            return const OnboardingScreen();
+          }
           return const HomeScreen();
         }
         // AuthUnauthenticated, AuthError, etc.

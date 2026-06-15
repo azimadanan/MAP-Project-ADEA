@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/task_model.dart';
 import '../../services/task_service.dart';
+import '../../services/notification_service.dart';
+import 'task_calendar_screen.dart';
 
 /// Tasks Screen — CRUD task list backed by Firestore
 class TasksScreen extends StatefulWidget {
@@ -52,6 +54,8 @@ class _TasksScreenState extends State<TasksScreen> {
   void _showAddTaskSheet() {
     _titleController.clear();
     DateTime? selectedDueDate;
+    TimeOfDay? selectedReminderTime;
+    bool hasReminder = false;
 
     showModalBottomSheet(
       context: context,
@@ -123,11 +127,54 @@ class _TasksScreenState extends State<TasksScreen> {
                         child: const Text('Clear due date'),
                       ),
                     ],
+                    const SizedBox(height: 12),
+                    SwitchListTile(
+                      title: const Text('Set Reminder', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                      subtitle: Text(
+                        selectedReminderTime == null
+                            ? 'Notify me on the due date'
+                            : 'Remind at ${selectedReminderTime!.format(context)}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      value: hasReminder,
+                      activeColor: const Color(0xFF185FA5),
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (val) async {
+                        setSheetState(() => hasReminder = val);
+                        if (val && selectedReminderTime == null) {
+                          final pickedTime = await showTimePicker(
+                            context: context,
+                            initialTime: const TimeOfDay(hour: 9, minute: 0),
+                          );
+                          if (pickedTime != null) {
+                            setSheetState(() => selectedReminderTime = pickedTime);
+                          } else {
+                            setSheetState(() => hasReminder = false);
+                          }
+                        }
+                      },
+                    ),
+                    if (hasReminder && selectedReminderTime != null) ...[
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          final pickedTime = await showTimePicker(
+                            context: context,
+                            initialTime: selectedReminderTime!,
+                          );
+                          if (pickedTime != null) {
+                            setSheetState(() => selectedReminderTime = pickedTime);
+                          }
+                        },
+                        icon: const Icon(Icons.access_time_rounded),
+                        label: Text('Change Time (${selectedReminderTime!.format(context)})'),
+                      ),
+                    ],
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: _isSaving
                           ? null
-                          : () => _saveTask(sheetContext, selectedDueDate),
+                          : () => _saveTask(sheetContext, selectedDueDate, hasReminder ? selectedReminderTime : null),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF185FA5),
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -163,20 +210,38 @@ class _TasksScreenState extends State<TasksScreen> {
   Future<void> _saveTask(
     BuildContext sheetContext,
     DateTime? dueDate,
+    TimeOfDay? reminderTime,
   ) async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
 
     try {
+      DateTime? reminderDateTime;
+      if (dueDate != null && reminderTime != null) {
+        reminderDateTime = DateTime(
+          dueDate.year,
+          dueDate.month,
+          dueDate.day,
+          reminderTime.hour,
+          reminderTime.minute,
+        );
+      }
+
       final task = TaskModel(
         id: '',
         title: _titleController.text.trim(),
         isCompleted: false,
         dueDate: dueDate,
+        reminderDateTime: reminderDateTime,
       );
 
-      await _taskService.addTask(task);
+      final taskId = await _taskService.addTask(task);
+      final savedTask = task.copyWith(id: taskId);
+
+      if (reminderDateTime != null) {
+        await NotificationService.instance.scheduleTaskReminder(savedTask);
+      }
 
       if (!sheetContext.mounted) return;
       Navigator.pop(sheetContext);
@@ -198,6 +263,15 @@ class _TasksScreenState extends State<TasksScreen> {
     if (value == null) return;
     try {
       await _taskService.toggleTaskCompletion(task.id, value);
+
+      final updatedTask = task.copyWith(isCompleted: value);
+      if (value) {
+        await NotificationService.instance.cancelTaskReminder(updatedTask);
+      } else {
+        if (updatedTask.reminderDateTime != null) {
+          await NotificationService.instance.scheduleTaskReminder(updatedTask);
+        }
+      }
     } catch (e) {
       if (!mounted) return;
       _showSnackBar(
@@ -210,6 +284,7 @@ class _TasksScreenState extends State<TasksScreen> {
   Future<void> _deleteTask(TaskModel task) async {
     try {
       await _taskService.deleteTask(task.id);
+      await NotificationService.instance.cancelTaskReminder(task);
       if (!mounted) return;
       _showSnackBar('Task deleted');
     } catch (e) {
@@ -240,13 +315,28 @@ class _TasksScreenState extends State<TasksScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-              child: Text(
-                'Tasks',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: textColor,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Tasks',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      color: textColor,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.calendar_month_rounded, color: primaryContainer, size: 28),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const TaskCalendarScreen()),
+                      );
+                    },
+                    tooltip: 'View Calendar',
+                  ),
+                ],
               ),
             ),
             Expanded(

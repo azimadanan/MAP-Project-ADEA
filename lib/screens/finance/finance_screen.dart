@@ -3,6 +3,8 @@ import '../../models/budget_model.dart';
 import '../../models/transaction_model.dart';
 import '../../services/finance_service.dart';
 import '../../widgets/running_balance_card.dart';
+import 'finance_summary_screen.dart';
+import 'recurring_transactions_screen.dart';
 
 class FinanceScreen extends StatefulWidget {  // Standard format, memorize for now.
   const FinanceScreen({super.key}); // When the rest of your app wants to navigate to this page, it calls this constructor.
@@ -14,6 +16,12 @@ class FinanceScreen extends StatefulWidget {  // Standard format, memorize for n
 class _FinanceScreenState extends State<FinanceScreen> {
   late FinanceService _financeService;            // late: It will be assigned a value before the UI uses it.
   final _formKey = GlobalKey<FormState>();        // Will be initialized in initState() later.
+  DateTime _selectedMonth = DateTime.now();
+
+  static const List<String> _monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
   final _budgetFormKey = GlobalKey<FormState>();  // GlobalKey: for checking errors later.
 
   // Form fields
@@ -380,6 +388,15 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     hintText: 'Enter transaction title',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   ),
+                  onChanged: (value) {
+                    // Auto-categorize based on title keywords (Sprint 1 ID 2)
+                    if (value.trim().length >= 3) {
+                      final suggested = FinanceService.autoCategorize(value);
+                      if (suggested != 'Other' && suggested != _selectedCategory) {
+                        setState(() => _selectedCategory = suggested);
+                      }
+                    }
+                  },
                   validator: (value) {
                     if (value?.isEmpty ?? true) {
                       return 'Please enter a title';
@@ -614,6 +631,26 @@ class _FinanceScreenState extends State<FinanceScreen> {
         title: Text('Finance', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: textColor)),
         // "centerTitle: false," : If you want to force the title to the left
         actions: [ // automatically placed on the right. it's also a list : "[ ]".
+          IconButton(
+            icon: const Icon(Icons.bar_chart_rounded, color: Color(0xFF185FA5)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FinanceSummaryScreen()),
+              );
+            },
+            tooltip: 'View Analytics',
+          ),
+          IconButton(
+            icon: const Icon(Icons.repeat_rounded, color: Color(0xFF185FA5)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RecurringTransactionsScreen()),
+              );
+            },
+            tooltip: 'Recurring Transactions',
+          ),
           TextButton.icon( // Designed to hold icon & text side-by-side.
             onPressed: _showBudgetForm,
             icon: const Icon(Icons.savings_outlined, size: 18, color: Color(0xFF185FA5)),
@@ -643,7 +680,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: outlineColor.withOpacity(0.3)),
                 boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 1))],
@@ -651,9 +688,30 @@ class _FinanceScreenState extends State<FinanceScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.chevron_left_rounded, color: outlineColor),
-                  Text('October 2023', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
-                  Icon(Icons.chevron_right_rounded, color: outlineColor),
+                  IconButton(
+                    icon: Icon(Icons.chevron_left_rounded, color: outlineColor),
+                    onPressed: () {
+                      setState(() {
+                        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
+                      });
+                    },
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  Text(
+                    '${_monthNames[_selectedMonth.month - 1]} ${_selectedMonth.year}',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.chevron_right_rounded, color: outlineColor),
+                    onPressed: () {
+                      setState(() {
+                        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+                      });
+                    },
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
                 ],
               ),
             ),
@@ -698,7 +756,12 @@ class _FinanceScreenState extends State<FinanceScreen> {
                         );
                       }
 
-                      final transactions = snapshot.data ?? [];
+                      final allTransactions = snapshot.data ?? [];
+                      final transactions = allTransactions
+                          .where((t) =>
+                              t.date.year == _selectedMonth.year &&
+                              t.date.month == _selectedMonth.month)
+                          .toList();
 
                       if (transactions.isEmpty) {
                         return Center(

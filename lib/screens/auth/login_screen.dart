@@ -383,78 +383,22 @@ class _GoogleLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Image.asset(
+      'assets/images/google_logo.jpg', // Change this to your actual image asset path
       width: size,
       height: size,
-      child: CustomPaint(painter: _GoogleLogoPainter()),
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        // Fallback space / placeholder when the image is not yet added/configured
+        return SizedBox(
+          width: size,
+          height: size,
+          child: const Icon(
+            Icons.image_outlined,
+            color: Color(0xFF727782),
+          ),
+        );
+      },
     );
   }
-}
-
-class _GoogleLogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final double s = size.width;
-    final double cx = s / 2;
-    final double cy = s / 2;
-    final double r = s * 0.45;
-    final double strokeW = s * 0.18;
-
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeW
-      ..strokeCap = StrokeCap.butt;
-
-    // Blue arc (right / top-right)  — from -45° to 90° (i.e. roughly 1 o'clock to 4 o'clock)
-    paint.color = const Color(0xFF4285F4);
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(cx, cy), radius: r),
-      -0.785, // -45°
-      1.57,   // 90°
-      false,
-      paint,
-    );
-
-    // Green arc (bottom-right) — from 45° to 90°
-    paint.color = const Color(0xFF34A853);
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(cx, cy), radius: r),
-      0.785, // 45°
-      1.57,  // 90°
-      false,
-      paint,
-    );
-
-    // Yellow arc (bottom-left) — from 135° to 90°
-    paint.color = const Color(0xFFFBBC05);
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(cx, cy), radius: r),
-      2.356, // 135°
-      1.57,  // 90°
-      false,
-      paint,
-    );
-
-    // Red arc (top-left) — from 225° to 90°
-    paint.color = const Color(0xFFEA4335);
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(cx, cy), radius: r),
-      3.927, // 225°
-      1.05,  // ~60°  (shorter so the gap opens at top-right)
-      false,
-      paint,
-    );
-
-    // Horizontal bar of the "G" (blue)
-    final barPaint = Paint()
-      ..color = const Color(0xFF4285F4)
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(
-      Rect.fromLTWH(cx, cy - strokeW / 2, r + strokeW / 2, strokeW),
-      barPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
