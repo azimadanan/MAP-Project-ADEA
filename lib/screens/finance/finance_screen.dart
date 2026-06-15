@@ -2,33 +2,34 @@ import 'package:flutter/material.dart';
 import '../../models/budget_model.dart';
 import '../../models/transaction_model.dart';
 import '../../services/finance_service.dart';
+import '../../widgets/running_balance_card.dart';
 
-/// Updated Finance Screen with CRUD operations
-class FinanceScreen extends StatefulWidget {
-  const FinanceScreen({super.key});
+class FinanceScreen extends StatefulWidget {  // Standard format, memorize for now.
+  const FinanceScreen({super.key}); // When the rest of your app wants to navigate to this page, it calls this constructor.
 
   @override
-  State<FinanceScreen> createState() => _FinanceScreenState();
-}
+  State<FinanceScreen> createState() => _FinanceScreenState(); // What this does: Whenever someone opens the FinanceScreen front door, 
+}                                                              // immediately create the private _FinanceScreenState back room, and link them together.
 
 class _FinanceScreenState extends State<FinanceScreen> {
-  late FinanceService _financeService;
-  final _formKey = GlobalKey<FormState>();
-  final _budgetFormKey = GlobalKey<FormState>();
+  late FinanceService _financeService;            // late: It will be assigned a value before the UI uses it.
+  final _formKey = GlobalKey<FormState>();        // Will be initialized in initState() later.
+  final _budgetFormKey = GlobalKey<FormState>();  // GlobalKey: for checking errors later.
 
   // Form fields
-  late TextEditingController _titleController;
+  late TextEditingController _titleController;       // TextEditingController: a listener. Like a "spy" that monitors what the user inputs.
   late TextEditingController _amountController;
   late TextEditingController _budgetLimitController;
-  String _selectedType = 'expense';
-  String _selectedCategory = 'Food & Dining';
+  late TextEditingController _baseBalanceController;
+  String _selectedType = 'expense';                  // Trackers: When your screen opens, the dropdown menus need a default value to show. These variables hold the default choices. 
+  String _selectedCategory = 'Food & Dining';        // If the user clicks the dropdown and changes it to "income," the UI will update this variable to remember their new choice.
   bool _isSavingBudget = false;
   bool _isSavingTransaction = false;
 
-  final List<String> _categories = [
-    'Food & Dining',
+  final List<String> _categories = [ // Square brackets "[]": for lists
+    'Food & Dining',                 // Curly brackets "{}": Maps or Sets 
     'Transport',
-    'Shopping',
+    'Shopping',                      // _categories is gonna be the dropdown list later.
     'Housing',
     'Entertainment',
     'Utilities',
@@ -38,20 +39,95 @@ class _FinanceScreenState extends State<FinanceScreen> {
   final List<String> _types = ['income', 'expense'];
 
   @override
-  void initState() {
-    super.initState();
-    _financeService = FinanceService();
-    _titleController = TextEditingController();
+  void initState() { // initState runs before any pixel is painted by the screen.
+    super.initState(); // FYI: super is short for superclass.
+    _financeService = FinanceService();  // utilizing finance_service.dart code
+    _titleController = TextEditingController(); 
     _amountController = TextEditingController();
     _budgetLimitController = TextEditingController();
+    _baseBalanceController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _titleController.dispose();
-    _amountController.dispose();
-    _budgetLimitController.dispose();
-    super.dispose();
+    _titleController.dispose();         // triggered once the screen (finance screen) is destroyed.
+    _amountController.dispose();        // if not, the controllers will eat up the memory.
+    _budgetLimitController.dispose();   // .dispose(): must actively remove the controllers. removed from memory. Basically, memory management.
+    _baseBalanceController.dispose();
+    super.dispose(); // Golden Rule: super.iniState() - FIRST line, super.dispose() - LAST line.
+  }
+
+  void _showEditBaseBalanceDialog(double currentBaseBalance) {
+    _baseBalanceController.text = currentBaseBalance.toStringAsFixed(2);
+    var isSaving = false;
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          Future<void> saveBaseBalance() async {
+            final value = double.tryParse(_baseBalanceController.text.trim());
+            if (value == null) {
+              _showSnackBar(
+                'Please enter a valid amount',
+                backgroundColor: Colors.red.shade700,
+              );
+              return;
+            }
+
+            setDialogState(() => isSaving = true);
+
+            try {
+              await _financeService.updateBaseBalance(value);
+              if (!dialogContext.mounted) return;
+              Navigator.pop(dialogContext);
+              if (!mounted) return;
+              _showSnackBar('Base balance updated');
+            } catch (e) {
+              if (!mounted) return;
+              _showSnackBar(
+                e.toString().replaceFirst('Exception: ', ''),
+                backgroundColor: Colors.red.shade700,
+              );
+            } finally {
+              if (dialogContext.mounted) {
+                setDialogState(() => isSaving = false);
+              }
+            }
+          }
+
+          return AlertDialog(
+            title: const Text('Edit Base Balance'),
+            content: TextField(
+              controller: _baseBalanceController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'New balance (RM)',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+              enabled: !isSaving,
+            ),
+            actions: [
+              TextButton(
+                onPressed: isSaving ? null : () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: isSaving ? null : saveBaseBalance,
+                child: isSaving
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Save'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   void _showSnackBar(String message, {Color? backgroundColor}) {
@@ -468,6 +544,20 @@ class _FinanceScreenState extends State<FinanceScreen> {
     }
   }
 
+  Future<void> _swipeDeleteTransaction(TransactionModel transaction) async {
+    try {
+      await _financeService.deleteTransaction(transaction.id);
+      if (!mounted) return;
+      _showSnackBar('Transaction deleted successfully');
+    } catch (e) {
+      if (!mounted) return;
+      _showSnackBar(
+        e.toString().replaceFirst('Exception: ', ''),
+        backgroundColor: Colors.red.shade700,
+      );
+    }
+  }
+
   /// Delete transaction with confirmation
   void _deleteTransaction(String id) async {
     Navigator.pop(context);
@@ -507,7 +597,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { // Context is basically like a GPS for your current widget tree. Flutter needs it to search where you are.
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
     final subtextColor = isDark ? const Color(0xFFc2c6d2) : const Color(0xFF424751);
@@ -515,16 +605,16 @@ class _FinanceScreenState extends State<FinanceScreen> {
     final scaffoldBg = isDark ? const Color(0xFF0F0F1A) : const Color(0xFFf2f3f7);
     final outlineColor = isDark ? const Color(0xFF727782) : const Color(0xFFc2c6d2);
     final primaryContainer = const Color(0xFF185FA5);
-    final primary = const Color(0xFF004782);
 
     return Scaffold(
-      backgroundColor: scaffoldBg,
-      appBar: AppBar(
-        backgroundColor: scaffoldBg,
-        elevation: 0,
+      backgroundColor: scaffoldBg, // The background of the entire screen (Scaffold).
+      appBar: AppBar( 
+        backgroundColor: scaffoldBg, // The background for appbar (top section).
+        elevation: 5, // drop shadow.
         title: Text('Finance', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: textColor)),
-        actions: [
-          TextButton.icon(
+        // "centerTitle: false," : If you want to force the title to the left
+        actions: [ // automatically placed on the right. it's also a list : "[ ]".
+          TextButton.icon( // Designed to hold icon & text side-by-side.
             onPressed: _showBudgetForm,
             icon: const Icon(Icons.savings_outlined, size: 18, color: Color(0xFF185FA5)),
             label: const Text(
@@ -535,9 +625,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.only(right: 20),
-            child: const CircleAvatar(
+          Container( // Static placeholder user profile button.
+            margin: const EdgeInsets.only(right: 20), // some spacing from the right edge.
+            child: const CircleAvatar( // automatically converts square images to circle. standard for flutter user profiles.
               radius: 18,
               backgroundColor: Colors.white,
               child: Icon(Icons.person, color: Color(0xFF185FA5), size: 20),
@@ -547,8 +637,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column( // Column main axis: Vertical (Top to Bottom).
+          crossAxisAlignment: CrossAxisAlignment.start, // Column cross axis: Horizontal (Left to Right).
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -556,7 +646,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: outlineColor.withOpacity(0.3)),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 1))],
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 1))],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -569,64 +659,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Summary Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: primaryContainer,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 4))],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Total Balance', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                          const SizedBox(height: 4),
-                          const Text('RM 14,250.00', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: -0.5)),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.arrow_upward_rounded, color: Color(0xFF9dd770), size: 14),
-                            const SizedBox(width: 2),
-                            const Text('+4.2%', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    height: 60,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        _chartBar('Mon', 0.4, false),
-                        _chartBar('Tue', 0.6, false),
-                        _chartBar('Wed', 0.3, false),
-                        _chartBar('Thu', 0.8, false),
-                        _chartBar('Fri', 1.0, true),
-                        _chartBar('Sat', 0.5, false),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            RunningBalanceCard(
+              balanceStream: _financeService.watchRunningBalance(),
+              onEditBaseBalance: _showEditBaseBalanceDialog,
+              primaryContainer: primaryContainer,
             ),
             const SizedBox(height: 24),
 
@@ -689,48 +725,82 @@ class _FinanceScreenState extends State<FinanceScreen> {
                           final iconColor = isIncome ? const Color(0xFF137333) : Colors.red;
                           final iconBg = isIncome ? const Color(0xFFE6F4EA) : const Color(0xFFFFEFE5);
 
-                          return GestureDetector(
-                            onTap: () => _showTransactionForm(transaction: transaction),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
-                                  child: Icon(
-                                    isIncome ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-                                    color: iconColor,
-                                    size: 24,
+                          return Dismissible(
+                            key: ValueKey(transaction.id),
+                            direction: DismissDirection.horizontal,
+                            background: _dismissBackground(Alignment.centerLeft),
+                            secondaryBackground:
+                                _dismissBackground(Alignment.centerRight),
+                            onDismissed: (_) =>
+                                _swipeDeleteTransaction(transaction),
+                            child: GestureDetector(
+                              onTap: () =>
+                                  _showTransactionForm(transaction: transaction),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: iconBg,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      isIncome
+                                          ? Icons.arrow_downward_rounded
+                                          : Icons.arrow_upward_rounded,
+                                      color: iconColor,
+                                      size: 24,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(transaction.title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor)),
-                                      const SizedBox(height: 2),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            transaction.category,
-                                            style: TextStyle(fontSize: 12, color: subtextColor),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          transaction.title,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: textColor,
                                           ),
-                                          Text(
-                                            '${DateTime.now().difference(transaction.date).inDays}d ago',
-                                            style: TextStyle(fontSize: 12, color: subtextColor),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              transaction.category,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: subtextColor,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${DateTime.now().difference(transaction.date).inDays}d ago',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: subtextColor,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  '$amountSign RM ${transaction.amount.toStringAsFixed(2)}',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: amountColor),
-                                ),
-                              ],
+                                  Text(
+                                    '$amountSign RM ${transaction.amount.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: amountColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         },
@@ -765,29 +835,16 @@ class _FinanceScreenState extends State<FinanceScreen> {
     );
   }
 
-  Widget _chartBar(String label, double heightRatio, bool isToday) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Container(
-          width: 30,
-          height: 40 * heightRatio,
-          decoration: BoxDecoration(
-            color: isToday ? Colors.white : Colors.white.withOpacity(0.3),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-            boxShadow: isToday ? [BoxShadow(color: Colors.white.withOpacity(0.3), blurRadius: 8)] : null,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: isToday ? Colors.white : Colors.white70,
-            fontSize: 11,
-            fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-          ),
-        ),
-      ],
+  Widget _dismissBackground(Alignment alignment) {
+    return Container(
+      alignment: alignment,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.red.shade700,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
     );
   }
 }

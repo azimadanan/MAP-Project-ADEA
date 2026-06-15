@@ -15,6 +15,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _targetController = TextEditingController();
+  final _unitController = TextEditingController();
   final _progressController = TextEditingController();
   bool _isSaving = false;
 
@@ -28,6 +29,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
   void dispose() {
     _titleController.dispose();
     _targetController.dispose();
+    _unitController.dispose();
     _progressController.dispose();
     super.dispose();
   }
@@ -61,6 +63,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
   void _showAddGoalSheet() {
     _titleController.clear();
     _targetController.clear();
+    _unitController.clear();
     DateTime? selectedDeadline;
 
     showModalBottomSheet(
@@ -127,6 +130,17 @@ class _GoalsScreenState extends State<GoalsScreen> {
                         }
                         return null;
                       },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _unitController,
+                      decoration: InputDecoration(
+                        labelText: 'Unit (optional)',
+                        hintText: 'e.g. km, kg, RM — auto-detected from title',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     OutlinedButton.icon(
@@ -212,6 +226,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
         targetValue: double.parse(_targetController.text.trim()),
         currentValue: 0,
         deadline: deadline,
+        unit: GoalModel.resolveUnit(
+          _unitController.text,
+          _titleController.text.trim(),
+        ),
       );
 
       await _goalService.addGoal(goal);
@@ -241,10 +259,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
         content: TextField(
           controller: _progressController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(
-            labelText: 'Amount to add',
+          decoration: InputDecoration(
+            labelText: 'Amount to add (${goal.displayUnit})',
             hintText: 'e.g. 10',
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
           ),
           autofocus: true,
         ),
@@ -385,7 +403,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
               final goal = goals[index];
               final progressText =
                   '${_formatValue(goal.currentValue)} / '
-                  '${_formatValue(goal.targetValue)} '
+                  '${_formatValue(goal.targetValue)} ${goal.displayUnit} '
                   '(${goal.progressPercent}%)';
 
               return Card(
@@ -460,6 +478,38 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       Text(
                         progressText,
                         style: TextStyle(fontSize: 13, color: subtextColor),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF252538)
+                              : const Color(0xFFF3F1FF),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.lightbulb_outline,
+                              size: 16,
+                              color: primaryContainer,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                goal.getPersonalizedFeedback(),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  height: 1.4,
+                                  color: subtextColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 16),
                       SizedBox(
