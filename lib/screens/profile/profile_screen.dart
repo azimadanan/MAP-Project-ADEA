@@ -4,6 +4,10 @@ import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
 import '../../repositories/user_repository.dart';
+import '../../models/task_model.dart';
+import '../../models/goal_model.dart';
+import '../../services/task_service.dart';
+import '../../services/goal_service.dart';
 
 /// Profile Screen — User info, edit name/preferences, logout matching Stitch Design
 class ProfileScreen extends StatefulWidget {
@@ -14,6 +18,8 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _userRepo = UserRepository();
+  final _taskService = TaskService();
+  final _goalService = GoalService();
   bool _notificationsOn = true;
   bool _darkModeOn = false;
   bool _dailySummaryOn = true;
@@ -147,11 +153,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         decoration: BoxDecoration(border: Border(top: BorderSide(color: outlineColor.withOpacity(0.2)))),
                         child: Row(
                           children: [
-                            Expanded(child: _statItem('128', 'Tasks', textColor, subtextColor)),
+                            Expanded(
+                              child: StreamBuilder<List<TaskModel>>(
+                                stream: _taskService.getTasks(),
+                                builder: (context, snapshot) {
+                                  final count = snapshot.data?.length ?? 0;
+                                  return _statItem('$count', 'Tasks', textColor, subtextColor);
+                                },
+                              ),
+                            ),
                             Container(width: 1, height: 40, color: outlineColor.withOpacity(0.2)),
-                            Expanded(child: _statItem('12', 'Goals', textColor, subtextColor)),
+                            Expanded(
+                              child: StreamBuilder<List<GoalModel>>(
+                                stream: _goalService.getGoals(),
+                                builder: (context, snapshot) {
+                                  final count = snapshot.data?.length ?? 0;
+                                  return _statItem('$count', 'Goals', textColor, subtextColor);
+                                },
+                              ),
+                            ),
                             Container(width: 1, height: 40, color: outlineColor.withOpacity(0.2)),
-                            Expanded(child: _statItem('45', 'Day Streak', textColor, subtextColor)),
+                            Expanded(child: _statItem('1', 'Day Streak', textColor, subtextColor)),
                           ],
                         ),
                       ),
