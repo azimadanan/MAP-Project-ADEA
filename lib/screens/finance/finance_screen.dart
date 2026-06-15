@@ -606,7 +606,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { // Context is basically like a GPS for your current widget tree. Flutter needs it to search where you are.
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
     final subtextColor = isDark ? const Color(0xFFc2c6d2) : const Color(0xFF424751);
@@ -616,13 +616,14 @@ class _FinanceScreenState extends State<FinanceScreen> {
     final primaryContainer = const Color(0xFF185FA5);
 
     return Scaffold(
-      backgroundColor: scaffoldBg,
-      appBar: AppBar(
-        backgroundColor: scaffoldBg,
-        elevation: 0,
+      backgroundColor: scaffoldBg, // The background of the entire screen (Scaffold).
+      appBar: AppBar( 
+        backgroundColor: scaffoldBg, // The background for appbar (top section).
+        elevation: 5, // drop shadow.
         title: Text('Finance', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: textColor)),
-        actions: [
-          TextButton.icon(
+        // "centerTitle: false," : If you want to force the title to the left
+        actions: [ // automatically placed on the right. it's also a list : "[ ]".
+          TextButton.icon( // Designed to hold icon & text side-by-side.
             onPressed: _showBudgetForm,
             icon: const Icon(Icons.savings_outlined, size: 18, color: Color(0xFF185FA5)),
             label: const Text(
@@ -633,9 +634,9 @@ class _FinanceScreenState extends State<FinanceScreen> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.only(right: 20),
-            child: const CircleAvatar(
+          Container( // Static placeholder user profile button.
+            margin: const EdgeInsets.only(right: 20), // some spacing from the right edge.
+            child: const CircleAvatar( // automatically converts square images to circle. standard for flutter user profiles.
               radius: 18,
               backgroundColor: Colors.white,
               child: Icon(Icons.person, color: Color(0xFF185FA5), size: 20),
@@ -645,8 +646,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column( // Column main axis: Vertical (Top to Bottom).
+          crossAxisAlignment: CrossAxisAlignment.start, // Column cross axis: Horizontal (Left to Right).
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -654,7 +655,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: outlineColor.withOpacity(0.3)),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 1))],
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 1))],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
