@@ -3,50 +3,131 @@ import 'dashboard_screen.dart';
 import '../finance/finance_screen.dart';
 import '../tasks/tasks_screen.dart';
 import '../goals/goals_screen.dart';
-import '../profile/profile_screen.dart';
+import '../reminders/reminders_screen.dart';
 
-/// HomeScreen — Bottom navigation shell with 5 tabs
+/// HomeScreen — Bottom navigation shell with 5 tabs and localized color zones
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key}); 
-  @override // @override: can detect if you misspell method names (i.e. cretstat()) and throws an error.
-  State<HomeScreen> createState() => _HomeScreenState(); // HomeScreen is the widget class, _HomeScreenState is the state class. State class holds the variables that change like _currentIndex.
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> { //assigns the state (_HomeScreenState) to the HomeScreen config widget.
-  int _currentIndex = 0; // For tracking the tabs, 0 is 1st tab, 1 is 2nd tab, etc.
+class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
 
-  final List<Widget> _screens = const [ // A list that can only hold UI widgets. const make the values unchangeable.
-    const DashboardScreen(),
-    FinanceScreen(), // Each of these screens will be defined in their own files under lib/screens/ and imported at the top.
-    TasksScreen(), // So, all the pages are given their indexes (0 - 4) and when we tap on the bottom nav, 
-    GoalsScreen(), // it will update _currentIndex and show the corresponding screen from this list.
-    ProfileScreen(),
-  ]; 
+  void _onTabChanged(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
-  @override // @override: adjusting the default build() method.
-  Widget build(BuildContext context) { // Widget build: a function that must return a widget (piece of UI). Widget is the return type.
+  ThemeData _buildZoneTheme(BuildContext context, int index) {
+    final baseTheme = Theme.of(context);
+    Color zoneColor;
+
+    switch (index) {
+      case 1:
+        zoneColor = const Color(0xFF4285F4); // Finance (Google Blue)
+        break;
+      case 2:
+        zoneColor = const Color(0xFFEA4335); // Tasks (Google Red)
+        break;
+      case 3:
+        zoneColor = const Color(0xFF34A853); // Goals (Google Green)
+        break;
+      case 4:
+        zoneColor = const Color(0xFFFBBC05); // Reminders (Google Yellow)
+        break;
+      default:
+        zoneColor = const Color(0xFF185FA5); // Home (Brand Blue)
+    }
+
+    return baseTheme.copyWith(
+      colorScheme: baseTheme.colorScheme.copyWith(
+        primary: zoneColor,
+        secondary: zoneColor,
+      ),
+      floatingActionButtonTheme: baseTheme.floatingActionButtonTheme.copyWith(
+        backgroundColor: zoneColor,
+        foregroundColor: Colors.white,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: zoneColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: zoneColor,
+        ),
+      ),
+      inputDecorationTheme: baseTheme.inputDecorationTheme.copyWith(
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: zoneColor, width: 2),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bottomNavColor = isDark ? const Color(0xFF1A1A2E) : Colors.white;
     final unselectedIconColor = isDark ? const Color(0xFFc2c6d2) : const Color(0xFF424751);
 
-    return Scaffold( // Scaffold is a structural framework. It does the heavy lifting of positioning major pieces like appBar(top), body(middle), and bottomNavigationBar(bottom).
-      body: IndexedStack(index: _currentIndex, children: _screens), // This is how they change pages. _screens [LINE 17] is the list of all the pages, and _currentIndex is the index of the page to show. IndexedStack keeps all the pages ALIVE but only shows the one at _currentIndex.
-      bottomNavigationBar: Container( // Standard Format for custom bottom nav. We use Container to add padding and background color, and then put the Row of nav items inside it.
-        decoration: BoxDecoration( // To decorate the Container (Invisible by default) with background color and shadow.
+    // Dynamic screens mapped inside build to receive the correct context and zone theme overrides
+    final List<Widget> themedScreens = [
+      Theme(
+        data: _buildZoneTheme(context, 0),
+        child: DashboardScreen(onTabSwitch: _onTabChanged),
+      ),
+      Theme(
+        data: _buildZoneTheme(context, 1),
+        child: const FinanceScreen(),
+      ),
+      Theme(
+        data: _buildZoneTheme(context, 2),
+        child: const TasksScreen(),
+      ),
+      Theme(
+        data: _buildZoneTheme(context, 3),
+        child: const GoalsScreen(),
+      ),
+      Theme(
+        data: _buildZoneTheme(context, 4),
+        child: const RemindersScreen(),
+      ),
+    ];
+
+    return Scaffold(
+      body: IndexedStack(index: _currentIndex, children: themedScreens),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
           color: bottomNavColor,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 3, offset: const Offset(0, -1))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            )
+          ],
         ),
-        child: SafeArea( // To avoid the widgets from being blocked by the system's UI like the home indicator.
-          child: Padding( // Auto padding. We could also use SizedBox(height: 16) for vertical spacing, but Padding is more flexible for both horizontal and vertical.
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8), 
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround, // similar to CSS flexbox justify-content.
-              children: [ 
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
                 _navItem(0, Icons.home_outlined, Icons.home_rounded, 'Home', isDark, unselectedIconColor),
                 _navItem(1, Icons.payments_outlined, Icons.payments_rounded, 'Finance', isDark, unselectedIconColor),
                 _navItem(2, Icons.checklist_outlined, Icons.checklist_rounded, 'Tasks', isDark, unselectedIconColor),
-                _navItem(3, Icons.workspace_premium_outlined, Icons.workspace_premium_rounded, 'Goals', isDark, unselectedIconColor),
-                _navItem(4, Icons.person_outline_rounded, Icons.person_rounded, 'Profile', isDark, unselectedIconColor),
+                _navItem(3, Icons.track_changes_outlined, Icons.track_changes_rounded, 'Goals', isDark, unselectedIconColor),
+                _navItem(4, Icons.notifications_none_rounded, Icons.notifications_rounded, 'Reminders', isDark, unselectedIconColor),
               ],
             ),
           ),
@@ -55,28 +136,61 @@ class _HomeScreenState extends State<HomeScreen> { //assigns the state (_HomeScr
     );
   }
 
-// SECTION 1 
-
   Widget _navItem(int index, IconData icon, IconData activeIcon, String label, bool isDark, Color unselectedColor) {
     final isSelected = _currentIndex == index;
-    final secondaryContainer = isDark ? const Color(0xFF958dff) : const Color(0xFFe3dfff);
-    final onSecondaryContainer = isDark ? const Color(0xFF2b1c8f) : const Color(0xFF140067);
+    Color zoneColor;
+
+    switch (index) {
+      case 1:
+        zoneColor = const Color(0xFF4285F4); // Finance (Blue)
+        break;
+      case 2:
+        zoneColor = const Color(0xFFEA4335); // Tasks (Red)
+        break;
+      case 3:
+        zoneColor = const Color(0xFF34A853); // Goals (Green)
+        break;
+      case 4:
+        zoneColor = const Color(0xFFFBBC05); // Reminders (Yellow)
+        break;
+      default:
+        zoneColor = const Color(0xFF185FA5); // Home (Blue-grey brand)
+    }
+
+    final secondaryContainer = isSelected
+        ? (isDark ? zoneColor.withOpacity(0.2) : zoneColor.withOpacity(0.12))
+        : Colors.transparent;
+        
+    final activeColor = isDark 
+        ? (index == 4 ? const Color(0xFFFFD60A) : zoneColor.withOpacity(0.95)) 
+        : zoneColor;
 
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
-      behavior: HitTestBehavior.opaque, // what makes the icons easier to tap by allowing taps in the padding area
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? secondaryContainer : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
+          color: secondaryContainer,
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(isSelected ? activeIcon : icon, color: isSelected ? onSecondaryContainer : unselectedColor, size: 24),
+            Icon(
+              isSelected ? activeIcon : icon,
+              color: isSelected ? activeColor : unselectedColor,
+              size: 24,
+            ),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(color: isSelected ? onSecondaryContainer : unselectedColor, fontSize: 11, fontWeight: FontWeight.w500)),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? activeColor : unselectedColor,
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
           ],
         ),
       ),

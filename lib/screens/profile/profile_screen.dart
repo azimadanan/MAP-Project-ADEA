@@ -86,7 +86,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final scaffoldBg = isDark ? const Color(0xFF0F0F1A) : const Color(0xFFf2f3f7);
     final outlineColor = isDark ? const Color(0xFF727782) : const Color(0xFFc2c6d2);
     final primaryContainer = const Color(0xFF185FA5);
-    final primary = const Color(0xFF004782);
 
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
@@ -100,18 +99,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           appBar: AppBar(
             backgroundColor: scaffoldBg,
             elevation: 0,
-            titleSpacing: 20,
-            title: Row(
-              children: [
-                CircleAvatar(radius: 16, backgroundColor: primaryContainer, child: Text(user.initials, style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold))),
-                const SizedBox(width: 12),
-                Text('AllInOne', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: primary, letterSpacing: -0.5)),
-              ],
+            title: Text('Profile', style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back_ios_rounded, color: textColor, size: 20),
+              onPressed: () => Navigator.pop(context),
             ),
-            actions: [
-              IconButton(icon: Icon(Icons.notifications_none_rounded, color: primary), onPressed: () {}),
-              const SizedBox(width: 8),
-            ],
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),

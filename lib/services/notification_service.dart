@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import '../models/task_model.dart';
+import '../models/reminder_model.dart';
 
 /// NotificationService — Local notification scheduling (singleton)
 class NotificationService {
@@ -186,6 +187,56 @@ class NotificationService {
   /// Cancel a scheduled task reminder notification
   Future<void> cancelTaskReminder(TaskModel task) async {
     final int notificationId = task.id.hashCode;
+    await _plugin.cancel(notificationId);
+  }
+
+  /// Schedule a local notification reminder for a custom Reminder
+  Future<void> scheduleCustomReminder(ReminderModel reminder) async {
+    if (!reminder.isActive) return;
+
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    final int notificationId = reminder.id.hashCode;
+    await _plugin.cancel(notificationId);
+
+    final reminderTZ = tz.TZDateTime.from(reminder.dateTime, tz.local);
+    final now = tz.TZDateTime.now(tz.local);
+
+    // If the reminder date is in the past, don't schedule it
+    if (reminderTZ.isBefore(now)) return;
+
+    const androidDetails = AndroidNotificationDetails(
+      'custom_reminder_channel',
+      'Reminders',
+      channelDescription: 'Notifications for custom reminders',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const darwinDetails = DarwinNotificationDetails();
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: darwinDetails,
+    );
+
+    await _plugin.zonedSchedule(
+      notificationId,
+      reminder.isUrgent ? '⚠️ Urgent Reminder' : '🔔 Reminder',
+      reminder.title,
+      reminderTZ,
+      details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
+  }
+
+  /// Cancel a scheduled custom reminder notification
+  Future<void> cancelCustomReminder(ReminderModel reminder) async {
+    final int notificationId = reminder.id.hashCode;
     await _plugin.cancel(notificationId);
   }
 }
