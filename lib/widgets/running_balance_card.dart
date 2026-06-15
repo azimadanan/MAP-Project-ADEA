@@ -1,34 +1,35 @@
-import 'package:flutter/material.dart';
-import '../services/finance_service.dart';
+import 'package:flutter/material.dart'; // imports the material library.
+import '../services/finance_service.dart'; // imports the finance service. for running balance.
 
-class RunningBalanceCard extends StatelessWidget {
-  final Stream<RunningBalanceSummary> balanceStream;
-  final void Function(double currentBaseBalance) onEditBaseBalance;
-  final Color primaryContainer;
+class RunningBalanceCard extends StatelessWidget { // RunningBalanceCard: class defined at the top
+  final Stream<RunningBalanceSummary> balanceStream; // Stream: watches for changes in database and updates immediately. Paired with StreamBuilder in UI.
+  final void Function(double currentBaseBalance) onEditBaseBalance; // void Function: a function that doesn't return anything.
+  final Color primaryContainer; // Color: a color object.
 
-  const RunningBalanceCard({
-    super.key,
-    required this.balanceStream,
-    required this.onEditBaseBalance,
+  const RunningBalanceCard({ // RunningBalanceCard: constructor
+    super.key, // super.key: the key of the widget.
+    required this.balanceStream, // required: the balance stream is required.
+    required this.onEditBaseBalance, // required: the on edit base balance function is required.
     this.primaryContainer = const Color(0xFF185FA5),
   });
 
-  String _formatCurrency(double amount) {
-    final formatted = amount.toStringAsFixed(2);
-    final parts = formatted.split('.');
-    final whole = parts[0].replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]},',
+  // MOREXP
+  String _formatCurrency(double amount) { // _formatCurrency: a helper function that formats the currency.
+    final formatted = amount.toStringAsFixed(2); // formatted: the formatted amount.
+    final parts = formatted.split('.'); // parts: the parts of the amount.
+    final whole = parts[0].replaceAllMapped( // whole: the whole part of the amount.
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), // RegExp: a regular expression. The weird symbols are for formatting the currency.
+      (match) => '${match[1]},', // match: the match of the regular expression. 
     );
-    return 'RM $whole.${parts[1]}';
-  }
+    return 'RM $whole.${parts[1]}'; // return: the formatted amount.
+  } // this.primaryContainer: the primary container is the color of the container.
 
   @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<RunningBalanceSummary>(
-      stream: balanceStream,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+  Widget build(BuildContext context) { // build: the function that builds the widget. Context is to tell the location of the widget.
+    return StreamBuilder<RunningBalanceSummary>( // why is the streambuilder here? because we are watching the balance stream and updating the UI immediately.
+      stream: balanceStream, // balanceStream: the balance stream.
+      builder: (context, snapshot) { // builder: the function that builds the widget. Context is to tell the location of the widget.
+        if (snapshot.connectionState == ConnectionState.waiting) { // if the connection state is waiting, show a loading indicator.
           return Container(
             width: double.infinity,
             height: 140,
