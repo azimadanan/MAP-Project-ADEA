@@ -1,17 +1,40 @@
 # allinone_app
 
-A new Flutter project.
+> 🚧 **Project Status: Work in Progress**
+> This project is currently under active development. Features are frequently being added.
 
-## Getting Started
+This is a personal management app. It will have automated finance tracking, and goals and tasks tracking. It is designed with the intent to assist any individual with their everyday tasks and managing productivity. The initial target group were students like ourselves, but this app could be used by anyone trying to get their hectic daily lives in order. We hope that this app could be of assistance. 
 
-This project is a starting point for a Flutter application.
+## 🧰 Tech Stack
+- **Fullstack:** Flutter
+- **Database:** Firebase
 
-A few resources to get you started if this is your first Flutter project:
+## 🏗️ Roadmap & Progress
+- [x] Login & Authentication (Completed)
+- [x] Goals & Tasks Management (Completed)
+- [ ] Login with Google (Planned)
+- [ ] Real-Time Finance Tracker (In Progress)
+- [ ] Live Dashboard (Planned)
+- [ ] Profile management (Planned)
+- [ ] UI/UX upgrades (Planned)
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## ⚙️Local Setup (Experimental)
+If you want to run the development version locally:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. Clone the repo:
+   ```bash
+   git clone git clone [https://github.com/YOUR-USERNAME/MAP-Project-ADEA-main.git]                    (https://github.com/YOUR-USERNAME/MAP-Project-ADEA-main.git)
+   ```
+2. Install dependencies:
+   ```bash
+   flutter pub get
+   ```
+3. Run the app:
+   ```
+   flutter run
+   ```
+   or to directly run on chrome (or whatever browser you prefer, just replace chrome in the code       below)
+   ```
+   flutter run -d chrome
+   ```
+
