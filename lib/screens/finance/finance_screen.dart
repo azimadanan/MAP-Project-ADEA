@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/budget_model.dart';
 import '../../models/transaction_model.dart';
 import '../../services/finance_service.dart';
+import '../../widgets/running_balance_card.dart';
 
 class FinanceScreen extends StatefulWidget {  // Standard format, memorize for now.
   const FinanceScreen({super.key}); // When the rest of your app wants to navigate to this page, it calls this constructor.
@@ -54,16 +55,6 @@ class _FinanceScreenState extends State<FinanceScreen> {
     _budgetLimitController.dispose();   // .dispose(): must actively remove the controllers. removed from memory. Basically, memory management.
     _baseBalanceController.dispose();
     super.dispose(); // Golden Rule: super.iniState() - FIRST line, super.dispose() - LAST line.
-  }
-
-  String _formatCurrency(double amount) {
-    final formatted = amount.toStringAsFixed(2);
-    final parts = formatted.split('.');
-    final whole = parts[0].replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]},',
-    );
-    return 'RM $whole.${parts[1]}';
   }
 
   void _showEditBaseBalanceDialog(double currentBaseBalance) {
@@ -668,119 +659,10 @@ class _FinanceScreenState extends State<FinanceScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Live running balance card
-            StreamBuilder<RunningBalanceSummary>(
-              stream: _financeService.watchRunningBalance(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Container(
-                    width: double.infinity,
-                    height: 140,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: primaryContainer,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: const CircularProgressIndicator(color: Colors.white),
-                  );
-                }
-
-                if (snapshot.hasError) {
-                  return Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: primaryContainer,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Text(
-                      'Could not load balance: ${snapshot.error}',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  );
-                }
-
-                final summary = snapshot.data ??
-                    const RunningBalanceSummary(
-                      baseBalance: 0,
-                      totalIncome: 0,
-                      totalExpenses: 0,
-                    );
-
-                return Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: primaryContainer,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Total Balance',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _formatCurrency(summary.runningBalance),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: -0.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              _showEditBaseBalanceDialog(summary.baseBalance);
-                            },
-                            icon: const Icon(
-                              Icons.edit_outlined,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                            tooltip: 'Edit base balance',
-                            style: IconButton.styleFrom(
-                              backgroundColor: Colors.white.withOpacity(0.2),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Base ${_formatCurrency(summary.baseBalance)} · '
-                        'Income ${_formatCurrency(summary.totalIncome)} · '
-                        'Expenses ${_formatCurrency(summary.totalExpenses)}',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+            RunningBalanceCard(
+              balanceStream: _financeService.watchRunningBalance(),
+              onEditBaseBalance: _showEditBaseBalanceDialog,
+              primaryContainer: primaryContainer,
             ),
             const SizedBox(height: 24),
 
